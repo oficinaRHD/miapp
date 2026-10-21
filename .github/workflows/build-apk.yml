@@ -1,0 +1,80 @@
+# Path in repo: .github/workflows/build-apk.yml
+# Builds a debug APK on every push to main, and publishes a Release when a v* tag is created.
+# Repo requirements: package-lock.json committed and android/ generated with `npx cap add android`.
+# Node 22 and JDK 21 match Capacitor 8; adjust if another major version is used (see docs/02).
+
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test --if-present
+
+      - name: Build web
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             asistente-tcp-debug-${{ github.run_number }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: asistente-tcp-debug-${{ github.run_number }}
+          path: asistente-tcp-debug-${{ github.run_number }}.apk
+          retention-days: 30
+
+      - name: Publish GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            asistente-tcp-debug-${{ github.run_number }}.apk \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
