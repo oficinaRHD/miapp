@@ -1,31 +1,76 @@
 <script lang="ts">
-  // Temporary shell for M3 step 1: shows the current route.
-  // Real views and i18n texts arrive in the next steps.
+  // Temporary shell for M3 step 2b: wires startup, profile store and onboarding guard.
+  // Real views arrive from step 3 on.
   import { onMount } from 'svelte';
-  import { router, initRouter } from './app/router.svelte';
+  import { es } from './i18n/es';
+  import { router, initRouter, navigate } from './app/router.svelte';
+  import { resolveRedirect } from './app/guard';
+  import { startApp } from './app/bootstrap';
+  import { perfilStore, isOnboardingDone, savePerfil, errorMessage } from './stores/perfil.svelte';
+  import { suggestedTributoCodes } from './domain/tributos.catalog';
 
   const links = [
     ['/', 'inicio'],
     ['/onboarding', 'onboarding'],
     ['/calendario', 'calendario'],
     ['/obligaciones/abc', 'obligacion'],
-    ['/registro/nuevo', 'registro nuevo'],
-    ['/ajustes/perfil', 'perfil'],
+    ['/ajustes/respaldo', 'respaldo'],
     ['/no-existe', '404'],
   ] as const;
 
-  onMount(() => initRouter());
+  onMount(() => {
+    const stop = initRouter();
+    void startApp();
+    return stop;
+  });
+
+  // Redirect once the profile is loaded, and again whenever route or profile change.
+  $effect(() => {
+    if (!perfilStore.loaded || perfilStore.error) return;
+    const to = resolveRedirect(router.route, isOnboardingDone());
+    if (to) navigate(to, true);
+  });
+
+  async function createTestProfile(): Promise<void> {
+    try {
+      await savePerfil({
+        nombreVisible: es.devProfileName,
+        tieneEmpleados: false,
+        tributosActivos: [...suggestedTributoCodes(false)],
+        onboardingCompleto: true,
+      });
+    } catch (e) {
+      perfilStore.error = errorMessage(e);
+    }
+  }
 </script>
 
 <main>
-  <h1>Asistente TCP</h1>
-  <p>Ruta: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
-  <p>Parámetros: <code>{JSON.stringify(router.route.params)}</code></p>
-  <nav>
-    {#each links as [path, label]}
-      <a href={'#' + path}>{label}</a>
-    {/each}
-  </nav>
+  <h1>{es.appName}</h1>
+
+  {#if perfilStore.error}
+    <p role="alert">{es.loadError}: {perfilStore.error}</p>
+  {:else if !perfilStore.loaded}
+    <p>{es.loading}</p>
+  {:else}
+    <p>{es.routeLabel}: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
+    <p>{es.paramsLabel}: <code>{JSON.stringify(router.route.params)}</code></p>
+    <p>{es.profileLabel}: <strong>{perfilStore.perfil?.nombreVisible ?? es.profileNone}</strong></p>
+
+    {#if router.route.name === 'onboarding'}
+      <section>
+        <h2>{es.devOnboardingTitle}</h2>
+        <p>{es.devOnboardingBody}</p>
+        <button onclick={createTestProfile}>{es.devCreateProfile}</button>
+      </section>
+    {/if}
+
+    <nav>
+      {#each links as [path, label]}
+        <a href={'#' + path}>{label}</a>
+      {/each}
+    </nav>
+  {/if}
 </main>
 
 <style>
