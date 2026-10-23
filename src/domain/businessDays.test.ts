@@ -5,7 +5,7 @@ import {
   nextBusinessDay,
   nthBusinessDayOfMonth,
   toHolidaySet,
-} from './businessDays';
+} from './businessDays.js';
 
 describe('isBusinessDay', () => {
   it('skips weekends', () => {

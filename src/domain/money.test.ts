@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyRateBp, formatCup, isCentavos, parseCup, subtractFloor } from './money';
+import { applyRateBp, formatCup, isCentavos, parseCup, subtractFloor } from './money.js';
 
 describe('parseCup', () => {
   it('parses plain and decimal amounts', () => {

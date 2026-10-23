@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { toHolidaySet } from './businessDays';
-import { generateObligations, obligationKey, onlyNew, type ObligationDraft } from './schedule';
+import { toHolidaySet } from './businessDays.js';
+import { generateObligations, obligationKey, onlyNew, type ObligationDraft } from './schedule.js';
 import { suggestedTributoCodes } from './tributos.catalog';
 
 // Test-only assumption derived from the vector: Jan 1 2027 is not a business day,

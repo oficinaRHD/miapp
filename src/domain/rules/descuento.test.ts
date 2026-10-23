@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { electronicDiscount } from './descuento';
+import { electronicDiscount } from './descuento.js';
 
 describe('electronicDiscount', () => {
   it('is 3 % of the amount', () => {

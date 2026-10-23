@@ -12,7 +12,7 @@ import {
   monthName,
   parseISODate,
   shiftMonth,
-} from './dates';
+} from './dates.js';
 
 describe('parseISODate', () => {
   it('parses valid dates', () => {
