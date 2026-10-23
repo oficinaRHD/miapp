@@ -1,51 +1,50 @@
 <script lang="ts">
-  import { es } from './i18n/es';
+  // Temporary shell for M3 step 1: shows the current route.
+  // Real views and i18n texts arrive in the next steps.
+  import { onMount } from 'svelte';
+  import { router, initRouter } from './app/router.svelte';
 
-  const APP_VERSION = '0.0.1';
+  const links = [
+    ['/', 'inicio'],
+    ['/onboarding', 'onboarding'],
+    ['/calendario', 'calendario'],
+    ['/obligaciones/abc', 'obligacion'],
+    ['/registro/nuevo', 'registro nuevo'],
+    ['/ajustes/perfil', 'perfil'],
+    ['/no-existe', '404'],
+  ] as const;
+
+  onMount(() => initRouter());
 </script>
 
 <main>
-  <h1>{es.appName}</h1>
-  <p class="tagline">{es.tagline}</p>
-
-  <section class="card">
-    <h2>{es.milestoneTitle}</h2>
-    <p>{es.milestoneBody}</p>
-  </section>
-
-  <p class="note">{es.offlineNote}</p>
-  <p class="version">{es.versionLabel} {APP_VERSION}</p>
+  <h1>Asistente TCP</h1>
+  <p>Ruta: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
+  <p>Parámetros: <code>{JSON.stringify(router.route.params)}</code></p>
+  <nav>
+    {#each links as [path, label]}
+      <a href={'#' + path}>{label}</a>
+    {/each}
+  </nav>
 </main>
 
 <style>
   main {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
-  h1 {
-    margin: 0 0 4px;
-    color: var(--primary);
-  }
-  .tagline {
-    margin: 0 0 20px;
-    color: var(--muted);
-  }
-  .card {
-    background: var(--surface);
-    border-radius: var(--radius);
     padding: 16px;
   }
-  .card h2 {
-    margin: 0 0 8px;
-    font-size: 1.1rem;
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
-  .card p {
-    margin: 0;
-  }
-  .note,
-  .version {
-    color: var(--muted);
-    font-size: 0.9rem;
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    color: inherit;
+    text-decoration: none;
   }
 </style>
