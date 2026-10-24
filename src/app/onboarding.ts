@@ -1,15 +1,17 @@
 import type { Perfil } from '../data/models';
 import { TRIBUTOS, suggestedTributoCodes, type Tributo } from '../domain/tributos.catalog';
+import type { ISODate } from '../domain/types';
 import type { NotificationPermissionState } from './notificationPermission';
+import type { YearDatesMode } from './yearDates';
 
-// Pure onboarding wizard logic (V01, steps 1-4). No UI, no DB, no fiscal rules:
+// Pure onboarding wizard logic (V01, steps 1-5). No UI, no DB, no fiscal rules:
 // suggested tributos come from the domain catalog.
 
-export const ONBOARDING_STEPS = ['bienvenida', 'perfil', 'tributos', 'notificaciones'] as const;
+export const ONBOARDING_STEPS = ['bienvenida', 'perfil', 'tributos', 'notificaciones', 'fechas'] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
-/** Steps of the full wizard (03, V01). Step 5 (year dates) comes later. */
-export const ONBOARDING_TOTAL_STEPS = 5;
+/** Steps of the full wizard (03, V01). */
+export const ONBOARDING_TOTAL_STEPS = ONBOARDING_STEPS.length;
 export const NAME_MAX = 60;
 
 export interface OnboardingDraft {
@@ -22,6 +24,10 @@ export interface OnboardingDraft {
   tributosEditados: boolean;
   /** Result of the last permission check or request (stored in settings, not in the profile). */
   notificationPermission: NotificationPermissionState;
+  /** Step 5: calculated pattern or dates copied from the vector. */
+  fechasModo: YearDatesMode;
+  /** Vector dates by `obligationKey`; only used when `fechasModo` is 'vector'. */
+  fechasVector: Record<string, ISODate>;
 }
 
 export type StepError = 'name-required' | 'name-too-long' | 'tributos-required';
@@ -51,6 +57,8 @@ export function emptyDraft(): OnboardingDraft {
     tributosActivos: [...suggestedTributoCodes(false)],
     tributosEditados: false,
     notificationPermission: 'unknown',
+    fechasModo: 'patron',
+    fechasVector: {},
   };
 }
 
@@ -65,6 +73,8 @@ export function draftFromPerfil(perfil: Perfil): OnboardingDraft {
     tributosActivos: [...perfil.tributosActivos],
     tributosEditados: !sameSet(perfil.tributosActivos, suggested),
     notificationPermission: 'unknown',
+    fechasModo: 'patron',
+    fechasVector: {},
   };
 }
 
@@ -103,6 +113,18 @@ export function setNotificationPermission(
   return { ...draft, notificationPermission: state };
 }
 
+export function setYearMode(draft: OnboardingDraft, mode: YearDatesMode): OnboardingDraft {
+  return { ...draft, fechasModo: mode };
+}
+
+/** Sets or clears (empty value) the vector date of one obligation key. */
+export function setVectorDate(draft: OnboardingDraft, key: string, value: string): OnboardingDraft {
+  const fechasVector = { ...draft.fechasVector };
+  if (value === '') delete fechasVector[key];
+  else fechasVector[key] = value;
+  return { ...draft, fechasVector };
+}
+
 export function validateStep(step: OnboardingStep, draft: OnboardingDraft): StepError[] {
   const errors: StepError[] = [];
   if (step === 'perfil') {
@@ -114,6 +136,7 @@ export function validateStep(step: OnboardingStep, draft: OnboardingDraft): Step
     errors.push('tributos-required');
   }
   // 'notificaciones' never blocks: a denied or undecided permission lets the user continue.
+  // 'fechas' never blocks: an empty vector field falls back to the calculated pattern.
   return errors;
 }
 

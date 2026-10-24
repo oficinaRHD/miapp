@@ -10,6 +10,8 @@ import {
   resetTributos,
   setNotificationPermission,
   setTieneEmpleados,
+  setVectorDate,
+  setYearMode,
   stepNumber,
   toggleTributo,
   toPerfilInput,
@@ -49,6 +51,12 @@ describe('emptyDraft', () => {
 
   it('starts with an unknown notification permission', () => {
     expect(emptyDraft().notificationPermission).toBe('unknown');
+  });
+
+  it('starts in pattern mode with no vector dates', () => {
+    const d = emptyDraft();
+    expect(d.fechasModo).toBe('patron');
+    expect(d.fechasVector).toEqual({});
   });
 });
 
@@ -132,6 +140,11 @@ describe('validateStep', () => {
     expect(validateStep('tributos', named('Rolando'))).toEqual([]);
   });
 
+  it('never blocks the year dates step, in either mode', () => {
+    expect(validateStep('fechas', named('Rolando'))).toEqual([]);
+    expect(canAdvance('fechas', setYearMode(named('Rolando'), 'vector'))).toBe(true);
+  });
+
   it('never blocks the notifications step, whatever the permission', () => {
     for (const state of ['granted', 'denied', 'unknown'] as const) {
       const d = setNotificationPermission(named('Rolando'), state);
@@ -153,10 +166,12 @@ describe('step navigation', () => {
     expect(nextStep('bienvenida')).toBe('perfil');
     expect(nextStep('perfil')).toBe('tributos');
     expect(nextStep('tributos')).toBe('notificaciones');
-    expect(nextStep('notificaciones')).toBeNull();
+    expect(nextStep('notificaciones')).toBe('fechas');
+    expect(nextStep('fechas')).toBeNull();
   });
 
   it('moves back and stops at the first step', () => {
+    expect(prevStep('fechas')).toBe('notificaciones');
     expect(prevStep('notificaciones')).toBe('tributos');
     expect(prevStep('tributos')).toBe('perfil');
     expect(prevStep('perfil')).toBe('bienvenida');
@@ -168,6 +183,7 @@ describe('step navigation', () => {
     expect(stepNumber('perfil')).toBe(2);
     expect(stepNumber('tributos')).toBe(3);
     expect(stepNumber('notificaciones')).toBe(4);
+    expect(stepNumber('fechas')).toBe(5);
   });
 });
 
@@ -178,6 +194,34 @@ describe('setNotificationPermission', () => {
     expect(next.notificationPermission).toBe('denied');
     expect(next.nombreVisible).toBe('Rolando');
     expect(d.notificationPermission).toBe('unknown');
+  });
+});
+
+describe('year dates draft', () => {
+  const KEY = '0114022|2026-09';
+
+  it('changes the mode without touching the typed dates', () => {
+    const d = setVectorDate(emptyDraft(), KEY, '2026-10-15');
+    const next = setYearMode(d, 'vector');
+    expect(next.fechasModo).toBe('vector');
+    expect(next.fechasVector).toEqual({ [KEY]: '2026-10-15' });
+  });
+
+  it('sets a vector date and replaces it on a second call', () => {
+    const one = setVectorDate(emptyDraft(), KEY, '2026-10-15');
+    const two = setVectorDate(one, KEY, '2026-10-16');
+    expect(two.fechasVector[KEY]).toBe('2026-10-16');
+  });
+
+  it('clears a vector date when the value is empty', () => {
+    const one = setVectorDate(emptyDraft(), KEY, '2026-10-15');
+    expect(setVectorDate(one, KEY, '').fechasVector).toEqual({});
+  });
+
+  it('does not mutate the original draft', () => {
+    const d = emptyDraft();
+    setVectorDate(d, KEY, '2026-10-15');
+    expect(d.fechasVector).toEqual({});
   });
 });
 

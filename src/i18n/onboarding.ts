@@ -48,7 +48,19 @@ export const esOnboarding = {
     'Avisos bloqueados. Puedes continuar y activarlos luego en los ajustes del sistema; Inicio te lo recordará.',
   notifStatusUnknown: 'Aún sin permiso. Puedes continuar y decidir después.',
 
-  pendingTitle: 'Perfil guardado',
-  pendingBody: 'Falta el paso de fechas del año (próximo paso de desarrollo).',
-  finishProvisional: 'Terminar (provisional)',
+  finish: 'Terminar',
+
+  datesTitle: 'Fechas del año',
+  datesLead: (year: number) =>
+    `Se crean tus obligaciones de ${year} desde este mes. Las de meses anteriores no se crean.`,
+  modePattern: 'Usar patrón',
+  modePatternHint: 'La app calcula cada fecha con la regla del tributo. Es una propuesta: tu vector manda.',
+  modeVector: 'Copiar del vector',
+  modeVectorHint: 'Escribe la fecha que figura en tu vector. Lo que dejes en blanco usa el patrón.',
+  summary: (count: number, first: string, last: string) =>
+    `Se crearán ${count} obligaciones, del ${first} al ${last}.`,
+  summaryNone: 'Con los tributos elegidos no hay obligaciones periódicas que crear.',
+  patternPrefix: 'Patrón',
+  holidaysNote: 'Las fechas calculadas aún no tienen en cuenta los feriados.',
+  estimateNotice: 'Estimación orientativa. Confirma con tu vector fiscal.',
 } as const;
