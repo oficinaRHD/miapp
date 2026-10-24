@@ -2,6 +2,7 @@
 import { db } from '../data';
 import type { Perfil } from '../data/models';
 import { perfilRepo, type PerfilInput } from '../data/repositories/perfil';
+import type { PerfilChanges } from '../app/perfilForm';
 
 interface PerfilState {
   perfil: Perfil | undefined;
@@ -45,4 +46,13 @@ export async function savePerfil(input: PerfilInput): Promise<void> {
 /** Merges fields into the existing profile and updates the store. */
 export async function patchPerfil(changes: Partial<PerfilInput>): Promise<void> {
   perfilStore.perfil = await repo.patch(changes);
+}
+
+/**
+ * Applies the V17 form. `undefined` values clear optional fields (the repository
+ * documents this). The cast is needed because `exactOptionalPropertyTypes` does not
+ * accept `undefined` in `Partial<PerfilInput>`; `parsePerfil` is the real validator.
+ */
+export async function updatePerfil(changes: PerfilChanges): Promise<void> {
+  await patchPerfil(changes as unknown as Partial<PerfilInput>);
 }

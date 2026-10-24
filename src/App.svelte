@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Temporary shell: wires startup, profile store, onboarding guard and the V01 view.
+  // Temporary shell: wires startup, profile store, onboarding guard and the V01 and V17 views.
   // The remaining views arrive in later steps.
   import { onMount } from 'svelte';
   import { es } from './i18n/es';
@@ -8,12 +8,14 @@
   import { startApp } from './app/bootstrap';
   import { perfilStore, isOnboardingDone } from './stores/perfil.svelte';
   import Onboarding from './views/onboarding/Onboarding.svelte';
+  import Perfil from './views/perfil/Perfil.svelte';
 
   const links = [
     ['/', 'inicio'],
     ['/onboarding', 'onboarding'],
     ['/calendario', 'calendario'],
     ['/obligaciones/abc', 'obligacion'],
+    ['/ajustes/perfil', 'perfil'],
     ['/ajustes/respaldo', 'respaldo'],
     ['/no-existe', '404'],
   ] as const;
@@ -42,6 +44,8 @@
   {:else}
     {#if router.route.name === 'onboarding'}
       <Onboarding />
+    {:else if router.route.name === 'perfil' && perfilStore.perfil}
+      <Perfil perfil={perfilStore.perfil} />
     {:else}
       <p>{es.routeLabel}: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
       <p>{es.paramsLabel}: <code>{JSON.stringify(router.route.params)}</code></p>
