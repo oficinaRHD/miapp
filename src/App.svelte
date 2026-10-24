@@ -1,13 +1,13 @@
 <script lang="ts">
-  // Temporary shell for M3 step 2b: wires startup, profile store and onboarding guard.
-  // Real views arrive from step 3 on.
+  // Temporary shell: wires startup, profile store, onboarding guard and the V01 view.
+  // The remaining views arrive in later steps.
   import { onMount } from 'svelte';
   import { es } from './i18n/es';
   import { router, initRouter, navigate } from './app/router.svelte';
   import { resolveRedirect } from './app/guard';
   import { startApp } from './app/bootstrap';
-  import { perfilStore, isOnboardingDone, savePerfil, errorMessage } from './stores/perfil.svelte';
-  import { suggestedTributoCodes } from './domain/tributos.catalog';
+  import { perfilStore, isOnboardingDone } from './stores/perfil.svelte';
+  import Onboarding from './views/onboarding/Onboarding.svelte';
 
   const links = [
     ['/', 'inicio'],
@@ -30,19 +30,6 @@
     const to = resolveRedirect(router.route, isOnboardingDone());
     if (to) navigate(to, true);
   });
-
-  async function createTestProfile(): Promise<void> {
-    try {
-      await savePerfil({
-        nombreVisible: es.devProfileName,
-        tieneEmpleados: false,
-        tributosActivos: [...suggestedTributoCodes(false)],
-        onboardingCompleto: true,
-      });
-    } catch (e) {
-      perfilStore.error = errorMessage(e);
-    }
-  }
 </script>
 
 <main>
@@ -53,16 +40,12 @@
   {:else if !perfilStore.loaded}
     <p>{es.loading}</p>
   {:else}
-    <p>{es.routeLabel}: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
-    <p>{es.paramsLabel}: <code>{JSON.stringify(router.route.params)}</code></p>
-    <p>{es.profileLabel}: <strong>{perfilStore.perfil?.nombreVisible ?? es.profileNone}</strong></p>
-
     {#if router.route.name === 'onboarding'}
-      <section>
-        <h2>{es.devOnboardingTitle}</h2>
-        <p>{es.devOnboardingBody}</p>
-        <button onclick={createTestProfile}>{es.devCreateProfile}</button>
-      </section>
+      <Onboarding />
+    {:else}
+      <p>{es.routeLabel}: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
+      <p>{es.paramsLabel}: <code>{JSON.stringify(router.route.params)}</code></p>
+      <p>{es.profileLabel}: <strong>{perfilStore.perfil?.nombreVisible ?? es.profileNone}</strong></p>
     {/if}
 
     <nav>
@@ -81,6 +64,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    margin-top: 16px;
   }
   a {
     display: inline-flex;
