@@ -106,6 +106,12 @@ Rutas con hash:
 - **Objetivo**: lista completa filtrable.
 - **Contenido**: filtros Pendientes, Pagadas, Vencidas; agrupadas por mes; cada fila con tributo, período, fecha límite, importe y estado.
 - **Acciones**: tocar abre V05; botón "Editar fechas del año" (copiar del vector).
+- **Reglas** (implementadas en `src/app/obligacionesList.ts`):
+  - Cuatro filtros excluyentes con contador: Pendientes, Vencidas, Pagadas, Omitidas. Se añade "Omitidas" a los tres del plan para poder ver las que se omitieron.
+  - Pendientes: todas las de estado pendiente, **incluidas las vencidas** (salen en rojo). Vencidas: pendientes con fecha anterior a hoy, un subconjunto de Pendientes. Si vence hoy, no es vencida.
+  - Por defecto se abre en Pendientes. Agrupadas por mes de la fecha límite, de la más próxima a la más lejana.
+  - Cada fila: tributo, período, fecha límite, importe y estado. Importe: lo pagado si está pagada; si no, el oficial; si no, el estimado; si no, "Importe por definir".
+- **Estado de implementación**: lista y filtros hechos en M4. El botón "Editar fechas del año" llega en el paso siguiente de M4.
 
 ### V05 Detalle y ficha de pago (v0.1)
 - **Objetivo**: tener a mano todo lo necesario para pagar y registrar que se pagó.
