@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Temporary shell: wires startup, profile store, onboarding guard and the V01 and V17 views.
+  // Temporary shell: wires startup, profile store, onboarding guard and the V01, V02 and V17 views.
   // The remaining views arrive in later steps.
   import { onMount } from 'svelte';
   import { es } from './i18n/es';
@@ -8,6 +8,7 @@
   import { startApp } from './app/bootstrap';
   import { perfilStore, isOnboardingDone } from './stores/perfil.svelte';
   import Onboarding from './views/onboarding/Onboarding.svelte';
+  import Inicio from './views/inicio/Inicio.svelte';
   import Perfil from './views/perfil/Perfil.svelte';
 
   const links = [
@@ -35,18 +36,23 @@
 </script>
 
 <main>
-  <h1>{es.appName}</h1>
-
   {#if perfilStore.error}
+    <h1>{es.appName}</h1>
     <p role="alert">{es.loadError}: {perfilStore.error}</p>
   {:else if !perfilStore.loaded}
+    <h1>{es.appName}</h1>
     <p>{es.loading}</p>
   {:else}
     {#if router.route.name === 'onboarding'}
+      <h1>{es.appName}</h1>
       <Onboarding />
+    {:else if router.route.name === 'inicio' && perfilStore.perfil}
+      <Inicio perfil={perfilStore.perfil} />
     {:else if router.route.name === 'perfil' && perfilStore.perfil}
+      <h1>{es.appName}</h1>
       <Perfil perfil={perfilStore.perfil} />
     {:else}
+      <h1>{es.appName}</h1>
       <p>{es.routeLabel}: <strong>{router.route.name}</strong> <code>{router.route.path}</code></p>
       <p>{es.paramsLabel}: <code>{JSON.stringify(router.route.params)}</code></p>
       <p>{es.profileLabel}: <strong>{perfilStore.perfil?.nombreVisible ?? es.profileNone}</strong></p>
@@ -70,7 +76,7 @@
     gap: 8px;
     margin-top: 16px;
   }
-  a {
+  nav a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;

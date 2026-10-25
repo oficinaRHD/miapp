@@ -1,7 +1,7 @@
 // Pure logic of V02 (Inicio): which obligations are overdue, which is next, which come in the next 30 days.
 // No fiscal rules here: only dates and states of already generated obligations.
 import type { Obligacion } from '../data/models';
-import { compareDates } from '../domain/dates';
+import { compareDates, diffDays } from '../domain/dates';
 import type { ISODate } from '../domain/types';
 
 /** Window of the "Próximos 30 días" list (03, V02). */
@@ -29,15 +29,9 @@ export interface InicioSummary {
   upcoming: InicioItem[];
 }
 
-// Local helper: whole days since 1970-01-01 for a YYYY-MM-DD date (no time zones).
-function dayNumber(date: ISODate): number {
-  const [y, m, d] = date.split('-').map(Number);
-  return Date.UTC(y!, m! - 1, d!) / 86_400_000;
-}
-
 /** Days from `today` to `vence` (negative if `vence` is in the past). */
 export function daysUntil(today: ISODate, vence: ISODate): number {
-  return dayNumber(vence) - dayNumber(today);
+  return diffDays(today, vence);
 }
 
 export function urgencyOf(dias: number): Urgency {
