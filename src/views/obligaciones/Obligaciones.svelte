@@ -15,8 +15,9 @@
   import { formatCup } from '../../domain/money';
   import { findTributo } from '../../domain/tributos.catalog';
   import { obligaciones as t } from '../../i18n/obligaciones';
-  import { listObligations } from '../../stores/obligaciones';
+  import { listObligations, type SaveResult } from '../../stores/obligaciones';
   import { errorMessage } from '../../stores/perfil.svelte';
+  import EditarFechas from './EditarFechas.svelte';
 
   const today = localISODate(new Date());
 
@@ -24,19 +25,35 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
   let filter = $state<ObligationFilter>('pendientes');
+  let editing = $state(false);
+  let notice = $state<string | null>(null);
 
   const counts = $derived(filterCounts(all, today));
   const groups = $derived(groupByDueMonth(filterObligations(all, filter, today)));
 
-  onMount(async () => {
+  async function load(): Promise<void> {
     try {
       all = await listObligations();
+      error = null;
     } catch (e) {
       error = errorMessage(e);
     } finally {
       loading = false;
     }
-  });
+  }
+
+  onMount(load);
+
+  async function closeEditor(result: SaveResult | null): Promise<void> {
+    editing = false;
+    if (!result) return;
+    const base = t.editDates.saved(result.updated);
+    notice =
+      result.failed.length === 0
+        ? base
+        : `${base} ${t.editDates.failed(result.failed.length)}: ${result.failed[0]!.message}`;
+    if (result.updated > 0) await load();
+  }
 
   function tributoName(code: string): string {
     return findTributo(code)?.shortName ?? code;
@@ -50,13 +67,17 @@
 </script>
 
 <section>
-  <h2>{t.title}</h2>
-
   {#if loading}
+    <h2>{t.title}</h2>
     <p>{t.loading}</p>
   {:else if error}
+    <h2>{t.title}</h2>
     <p role="alert">{t.loadError}: {error}</p>
+  {:else if editing}
+    <EditarFechas obligaciones={all} {today} onclose={closeEditor} />
   {:else}
+    <h2>{t.title}</h2>
+
     <div class="filters" role="group" aria-label={t.filterLabel}>
       {#each FILTERS as f (f)}
         <button type="button" aria-pressed={filter === f} onclick={() => (filter = f)}>
@@ -64,6 +85,18 @@
         </button>
       {/each}
     </div>
+
+    <button
+      type="button"
+      class="edit"
+      onclick={() => {
+        notice = null;
+        editing = true;
+      }}>{t.editDates.button}</button>
+
+    {#if notice}
+      <p class="notice" role="status">{notice}</p>
+    {/if}
 
     {#if groups.length === 0}
       <p>{t.empty[filter]}</p>
@@ -99,14 +132,21 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .filters button {
+  .filters button,
+  .edit {
     min-height: 44px;
     padding: 0 12px;
     border: 1px solid currentColor;
-    border-radius: 999px;
     background: transparent;
     color: inherit;
     font: inherit;
+  }
+  .filters button {
+    border-radius: 999px;
+  }
+  .edit {
+    margin-top: 12px;
+    border-radius: 8px;
   }
   .filters button[aria-pressed='true'] {
     font-weight: 700;
@@ -114,6 +154,12 @@
   }
   .n {
     opacity: 0.75;
+  }
+  .notice {
+    margin: 12px 0 0;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
   }
   .card {
     display: flex;

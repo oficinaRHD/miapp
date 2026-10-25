@@ -111,7 +111,13 @@ Rutas con hash:
   - Pendientes: todas las de estado pendiente, **incluidas las vencidas** (salen en rojo). Vencidas: pendientes con fecha anterior a hoy, un subconjunto de Pendientes. Si vence hoy, no es vencida.
   - Por defecto se abre en Pendientes. Agrupadas por mes de la fecha límite, de la más próxima a la más lejana.
   - Cada fila: tributo, período, fecha límite, importe y estado. Importe: lo pagado si está pagada; si no, el oficial; si no, el estimado; si no, "Importe por definir".
-- **Estado de implementación**: lista y filtros hechos en M4. El botón "Editar fechas del año" llega en el paso siguiente de M4.
+- **Editar fechas del año** (botón en la misma vista; `src/app/editDates.ts`):
+  - Abre una pantalla con las obligaciones **pendientes** del año, agrupadas por tributo. Cada fila muestra la fecha actual, la fecha del patrón y un campo de fecha para escribir la del vector.
+  - Solo se guardan las filas que cambian (fecha válida y distinta). Se guardan con origen "vector". Las pagadas y omitidas no se tocan; el repositorio además bloquea las pagadas.
+  - El año es el del período (la anual 2026, con fecha en abril de 2027, se edita en 2026). Si hay más de un año con pendientes, se puede cambiar de año.
+  - Al guardar vuelve a la lista con un aviso de cuántas fechas se cambiaron y, si alguna falló, cuántas.
+  - Pendiente: reprogramar los avisos de las fechas cambiadas (M6, notificaciones) y los feriados reales.
+- **Estado de implementación**: lista, filtros y edición de fechas hechos en M4.
 
 ### V05 Detalle y ficha de pago (v0.1)
 - **Objetivo**: tener a mano todo lo necesario para pagar y registrar que se pagó.
