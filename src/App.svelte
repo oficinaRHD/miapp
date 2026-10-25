@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Temporary shell: wires startup, profile store, onboarding guard and the V01, V02 and V17 views.
+  // Temporary shell: wires startup, profile store, onboarding guard and the V01, V02, V03 and V17 views.
   // The remaining views arrive in later steps.
   import { onMount } from 'svelte';
   import { es } from './i18n/es';
@@ -7,6 +7,7 @@
   import { resolveRedirect } from './app/guard';
   import { startApp } from './app/bootstrap';
   import { perfilStore, isOnboardingDone } from './stores/perfil.svelte';
+  import Calendario from './views/calendario/Calendario.svelte';
   import Onboarding from './views/onboarding/Onboarding.svelte';
   import Inicio from './views/inicio/Inicio.svelte';
   import Perfil from './views/perfil/Perfil.svelte';
@@ -48,6 +49,8 @@
       <Onboarding />
     {:else if router.route.name === 'inicio' && perfilStore.perfil}
       <Inicio perfil={perfilStore.perfil} />
+    {:else if router.route.name === 'calendario'}
+      <Calendario />
     {:else if router.route.name === 'perfil' && perfilStore.perfil}
       <h1>{es.appName}</h1>
       <Perfil perfil={perfilStore.perfil} />
