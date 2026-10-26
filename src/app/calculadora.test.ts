@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { calcMonth, draftFromTotals, evaluateDraft, isEdited, percentText } from './calculadora';
+import {
+  calcMonth,
+  draftFromTotals,
+  evaluateDraft,
+  isEdited,
+  percentText,
+  withElectronicDiscount,
+} from './calculadora';
 
 describe('calcMonth', () => {
   it('is zero without income', () => {
@@ -66,5 +73,23 @@ describe('percentText', () => {
     expect(percentText(1000)).toBe('10 %');
     expect(percentText(500)).toBe('5 %');
     expect(percentText(10)).toBe('0.1 %');
+  });
+});
+
+describe('withElectronicDiscount', () => {
+  it('takes 3 % off each tax', () => {
+    const d = withElectronicDiscount(calcMonth({ ventas: 100_000, ingresos: 500_000 }));
+    expect(d.ventas).toEqual({ discount: 300, total: 9_700 });
+    expect(d.isip).toEqual({ discount: 261, total: 8_439 });
+    expect(d.total).toBe(18_139);
+    expect(d.saved).toBe(561);
+  });
+  it('rounds per payment, not on the sum', () => {
+    // 0114022 = 0.50 and 0510122 = 0.50: 3 % of 50 centavos is 1.5, rounded up to 2 each time.
+    const r = calcMonth({ ventas: 500, ingresos: 327_000 });
+    expect([r.ventasTax, r.isipTax]).toEqual([50, 50]);
+    const d = withElectronicDiscount(r);
+    expect(d.saved).toBe(4);
+    expect(d.total).toBe(96);
   });
 });

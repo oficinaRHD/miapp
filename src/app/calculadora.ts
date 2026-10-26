@@ -1,4 +1,9 @@
 // Month estimate for V08. Combines the domain rules; no rate or threshold is written here.
+import {
+  ELECTRONIC_DISCOUNT_RATE_BP,
+  electronicDiscount,
+  type ElectronicDiscount,
+} from '../domain/rules/descuento';
 import { ISIP_MONTHLY_RATE_BP, MONTHLY_EXEMPT_MINIMUM, monthlyIsip } from '../domain/rules/isipMensual';
 import { SALES_RATE_BP, salesTax } from '../domain/rules/ventas';
 import type { Centavos } from '../domain/types';
@@ -9,6 +14,7 @@ export const CALC_INFO = {
   salesRateBp: SALES_RATE_BP,
   isipRateBp: ISIP_MONTHLY_RATE_BP,
   exemptMinimum: MONTHLY_EXEMPT_MINIMUM,
+  discountRateBp: ELECTRONIC_DISCOUNT_RATE_BP,
 } as const;
 
 export interface CalcInput {
@@ -29,6 +35,26 @@ export function calcMonth(input: CalcInput): CalcResult {
   const ventasTax = salesTax(input.ventas);
   const isipTax = monthlyIsip(input.ingresos);
   return { ...input, ventasTax, isipTax, total: ventasTax + isipTax };
+}
+
+export interface DiscountResult {
+  ventas: ElectronicDiscount;
+  isip: ElectronicDiscount;
+  /** Sum of what is paid after the discount. */
+  total: Centavos;
+  /** Sum of both discounts. */
+  saved: Centavos;
+}
+
+/**
+ * Electronic-channel discount applied to each tax separately, because each one is paid on its
+ * own obligation (so the rounding is per payment). Whether it also applies to late surcharges
+ * is not stated in 01 and is not handled here.
+ */
+export function withElectronicDiscount(r: CalcResult): DiscountResult {
+  const ventas = electronicDiscount(r.ventasTax);
+  const isip = electronicDiscount(r.isipTax);
+  return { ventas, isip, total: ventas.total + isip.total, saved: ventas.discount + isip.discount };
 }
 
 /** Basis points to text without trailing zeros: 1000 -> '10 %', 500 -> '5 %', 10 -> '0.1 %'. */

@@ -1,22 +1,27 @@
 <script lang="ts">
   // V08 Calculadora del mes: estimate of 0114022 and 0510122 from the month's income.
   // No fiscal logic here: see `calculadora.ts` and the rules in `src/domain/rules`.
-  import { onMount, untrack } from 'svelte';
+  import { untrack } from 'svelte';
   import {
     CALC_INFO,
     draftFromTotals,
     evaluateDraft,
     isEdited,
     percentText,
+    withElectronicDiscount,
     type CalcDraft,
   } from '../../app/calculadora';
+  import { findEstimateTarget, type EstimateTarget } from '../../app/calculadoraLink';
   import { monthTotals, type MonthTotals } from '../../app/registro';
   import { monthKeyFrom } from '../../app/registroMonth';
   import { localISODate, monthName, parseISODate, shiftMonth } from '../../domain/dates';
+  import type { Obligacion } from '../../data/models';
+  import type { Centavos } from '../../domain/types';
   import { formatCup } from '../../domain/money';
   import { findTributo } from '../../domain/tributos.catalog';
   import { esCalculadora as t } from '../../i18n/calculadora';
   import { listMovementsByMonth } from '../../stores/movimientos';
+  import { listObligations, updateObligation } from '../../stores/obligaciones';
   import { errorMessage } from '../../stores/perfil.svelte';
 
   const today = localISODate(new Date());
@@ -26,6 +31,10 @@
   let month = $state(start.month);
   let totals = $state<MonthTotals>(monthTotals([]));
   let draft = $state<CalcDraft>(draftFromTotals(monthTotals([])));
+  let obligs = $state<Obligacion[]>([]);
+  let notice = $state<{ code: string; id: string; label: string } | null>(null);
+  let busyCode = $state<string | null>(null);
+  let useError = $state<string | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
   let request = 0;
@@ -33,6 +42,15 @@
   const mes = $derived(monthKeyFrom(year, month));
   const evaluation = $derived(evaluateDraft(draft));
   const edited = $derived(isEdited(draft, totals));
+  const discount = $derived(evaluation.result ? withElectronicDiscount(evaluation.result) : null);
+  const targets = $derived(
+    evaluation.result
+      ? {
+          ventas: findEstimateTarget(obligs, '0114022', mes, evaluation.result.ventasTax),
+          isip: findEstimateTarget(obligs, '0510122', mes, evaluation.result.isipTax),
+        }
+      : null,
+  );
 
   function tributoName(code: string): string {
     return findTributo(code)?.shortName ?? code;
@@ -48,15 +66,34 @@
     const mine = ++request;
     loading = true;
     try {
-      const rows = await listMovementsByMonth(key);
+      const [rows, obls] = await Promise.all([listMovementsByMonth(key), listObligations()]);
       if (mine !== request) return;
       totals = monthTotals(rows);
       draft = draftFromTotals(totals);
+      obligs = obls;
+      notice = null;
+      useError = null;
       error = null;
     } catch (e) {
       if (mine === request) error = errorMessage(e);
     } finally {
       if (mine === request) loading = false;
+    }
+  }
+
+  async function useEstimate(target: EstimateTarget, amount: Centavos): Promise<void> {
+    if (target.status !== 'ready' || target.obligacionId === undefined) return;
+    busyCode = target.codigo;
+    useError = null;
+    notice = null;
+    try {
+      const updated = await updateObligation(target.obligacionId, { importeEstimado: amount });
+      obligs = await listObligations();
+      notice = { code: target.codigo, id: updated.id, label: updated.periodoEtiqueta };
+    } catch (e) {
+      useError = `${t.use.saveError}: ${errorMessage(e)}`;
+    } finally {
+      busyCode = null;
     }
   }
 
@@ -66,6 +103,36 @@
     month = next.month;
   }
 </script>
+
+{#snippet useBlock(target: EstimateTarget, amount: Centavos)}
+  <div class="use">
+    {#if target.status === 'missing'}
+      <p class="hint">{t.use.missing(`${monthName(month)} ${year}`)}</p>
+    {:else if target.status === 'paid'}
+      <p class="hint">{t.use.paid}</p>
+    {:else if target.status === 'omitted'}
+      <p class="hint">{t.use.omitted}</p>
+    {:else}
+      <p class="hint">{t.use.forPeriod(target.periodoEtiqueta ?? '')}</p>
+      {#if target.hasOfficial}
+        <p class="hint">{t.use.official}</p>
+      {/if}
+      {#if edited}
+        <p class="hint">{t.use.editedNote}</p>
+      {/if}
+      {#if target.upToDate}
+        <p class="hint">{t.use.upToDate}</p>
+      {:else}
+        <button type="button" disabled={busyCode !== null} onclick={() => void useEstimate(target, amount)}>
+          {t.use.button}
+        </button>
+      {/if}
+    {/if}
+    {#if notice && notice.code === target.codigo}
+      <p role="status">{t.use.saved(notice.label)} <a href={'#/obligaciones/' + notice.id}>{t.use.open}</a></p>
+    {/if}
+  </div>
+{/snippet}
 
 <section>
   <h2>{t.title}</h2>
@@ -125,6 +192,9 @@
           <div><dt>{t.rate}</dt><dd>{percentText(CALC_INFO.salesRateBp)}</dd></div>
           <div class="strong"><dt>{t.tax}</dt><dd>{formatCup(r.ventasTax)}</dd></div>
         </dl>
+        {#if targets}
+          {@render useBlock(targets.ventas, r.ventasTax)}
+        {/if}
       </div>
 
       <div class="card">
@@ -135,12 +205,32 @@
           <div><dt>{t.rate}</dt><dd>{t.rateOverExcess(percentText(CALC_INFO.isipRateBp))}</dd></div>
           <div class="strong"><dt>{t.tax}</dt><dd>{formatCup(r.isipTax)}</dd></div>
         </dl>
+        {#if targets}
+          {@render useBlock(targets.isip, r.isipTax)}
+        {/if}
       </div>
 
       <div class="card total">
         <h3>{t.totalTitle}</h3>
         <p class="big">{formatCup(r.total)}</p>
       </div>
+
+      {#if discount}
+        <div class="card">
+          <h3>{t.discount.title}</h3>
+          <p class="hint">{t.discount.lead(percentText(CALC_INFO.discountRateBp))}</p>
+          <dl>
+            <div><dt>{tributoName('0114022')}</dt><dd>{formatCup(discount.ventas.total)}</dd></div>
+            <div><dt>{tributoName('0510122')}</dt><dd>{formatCup(discount.isip.total)}</dd></div>
+            <div class="strong"><dt>{t.discount.total}</dt><dd>{formatCup(discount.total)}</dd></div>
+            <div><dt>{t.discount.saved}</dt><dd>{formatCup(discount.saved)}</dd></div>
+          </dl>
+        </div>
+      {/if}
+
+      {#if useError}
+        <p class="error" role="alert">{useError}</p>
+      {/if}
     {/if}
 
     <p class="note">{t.disclaimer}</p>
@@ -216,6 +306,13 @@
   }
   .strong {
     font-weight: 700;
+  }
+  .use {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
   }
   .total {
     border-width: 2px;
