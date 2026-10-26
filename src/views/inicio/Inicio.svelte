@@ -3,18 +3,22 @@
   import type { Obligacion, Perfil } from '../../data/models';
   import { buildInicioSummary, type InicioItem } from '../../app/inicio';
   import { buildMonthSummary, type MonthSummary } from '../../app/inicioMes';
+  import { showBackupAlert } from '../../app/inicioRespaldo';
   import { formatDate } from '../../app/format';
   import type { NotificationPermissionState } from '../../app/notificationPermission';
   import { monthKeyOf } from '../../app/registro';
   import { newMovementPath } from '../../app/registroRoutes';
+  import { backupState } from '../../app/respaldo';
   import { localISODate, monthName, parseISODate } from '../../domain/dates';
   import { formatCup } from '../../domain/money';
   import { findTributo } from '../../domain/tributos.catalog';
   import { inicio as t, daysText, overdueText } from '../../i18n/inicio';
+  import { inicioRespaldo } from '../../i18n/inicioRespaldo';
   import { loadNotificationPermission } from '../../stores/ajustes';
   import { listMovementsByMonth } from '../../stores/movimientos';
   import { listObligations } from '../../stores/obligaciones';
   import { errorMessage } from '../../stores/perfil.svelte';
+  import { loadBackupReminder, loadLastBackup } from '../../stores/respaldo';
 
   let { perfil }: { perfil: Perfil } = $props();
 
@@ -22,6 +26,7 @@
   let permiso = $state<NotificationPermissionState>('unknown');
   let month = $state<MonthSummary | null>(null);
   let monthError = $state<string | null>(null);
+  let backupAlert = $state<string | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
   const today = localISODate(new Date());
@@ -39,8 +44,20 @@
     }
   }
 
+  // The backup alert is optional: a read error just hides it.
+  async function loadBackupAlert(): Promise<void> {
+    try {
+      const [last, reminderOn] = await Promise.all([loadLastBackup(), loadBackupReminder()]);
+      const state = backupState(last, today);
+      backupAlert = showBackupAlert(state, reminderOn) ? inicioRespaldo.text(state) : null;
+    } catch {
+      backupAlert = null;
+    }
+  }
+
   onMount(async () => {
     void loadMonth();
+    void loadBackupAlert();
     try {
       obligaciones = await listObligations({ estado: 'pendiente' });
     } catch (e) {
@@ -91,7 +108,7 @@
   {:else if error}
     <p role="alert">{t.loadError}: {error}</p>
   {:else}
-    {#if summary.overdue.length > 0 || permiso === 'denied'}
+    {#if summary.overdue.length > 0 || permiso === 'denied' || backupAlert !== null}
       <div class="alerts" role="status">
         <h3>{t.alertsTitle}</h3>
         {#if summary.overdue.length > 0}
@@ -99,6 +116,9 @@
         {/if}
         {#if permiso === 'denied'}
           <p>{t.notificationsDenied} <a href="#/ajustes/notificaciones">{t.notificationsFix}</a></p>
+        {/if}
+        {#if backupAlert !== null}
+          <p>{backupAlert} <a href="#/ajustes/respaldo">{inicioRespaldo.link}</a></p>
         {/if}
       </div>
     {/if}
