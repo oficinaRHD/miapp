@@ -2,13 +2,17 @@
   import { onMount } from 'svelte';
   import type { Obligacion, Perfil } from '../../data/models';
   import { buildInicioSummary, type InicioItem } from '../../app/inicio';
+  import { buildMonthSummary, type MonthSummary } from '../../app/inicioMes';
   import { formatDate } from '../../app/format';
   import type { NotificationPermissionState } from '../../app/notificationPermission';
-  import { localISODate } from '../../domain/dates';
+  import { monthKeyOf } from '../../app/registro';
+  import { newMovementPath } from '../../app/registroRoutes';
+  import { localISODate, monthName, parseISODate } from '../../domain/dates';
   import { formatCup } from '../../domain/money';
   import { findTributo } from '../../domain/tributos.catalog';
   import { inicio as t, daysText, overdueText } from '../../i18n/inicio';
   import { loadNotificationPermission } from '../../stores/ajustes';
+  import { listMovementsByMonth } from '../../stores/movimientos';
   import { listObligations } from '../../stores/obligaciones';
   import { errorMessage } from '../../stores/perfil.svelte';
 
@@ -16,13 +20,27 @@
 
   let obligaciones = $state<Obligacion[]>([]);
   let permiso = $state<NotificationPermissionState>('unknown');
+  let month = $state<MonthSummary | null>(null);
+  let monthError = $state<string | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
   const today = localISODate(new Date());
+  const start = parseISODate(today)!;
+  const monthLabel = `${monthName(start.month)} ${start.year}`;
 
   const summary = $derived(buildInicioSummary(obligaciones, today));
 
+  // The month summary loads on its own: if it fails, the obligations still show.
+  async function loadMonth(): Promise<void> {
+    try {
+      month = buildMonthSummary(await listMovementsByMonth(monthKeyOf(today)));
+    } catch (e) {
+      monthError = errorMessage(e);
+    }
+  }
+
   onMount(async () => {
+    void loadMonth();
     try {
       obligaciones = await listObligations({ estado: 'pendiente' });
     } catch (e) {
@@ -99,6 +117,37 @@
       <p>{t.nextNone}</p>
     {/if}
 
+    <h3>{t.month.title(monthLabel)}</h3>
+    {#if monthError}
+      <p role="alert">{t.month.loadError}: {monthError}</p>
+    {:else if month === null}
+      <p>{t.loading}</p>
+    {:else}
+      <dl class="totals">
+        <div>
+          <dt>{t.month.income}</dt>
+          <dd>{formatCup(month.ingresos)}</dd>
+        </div>
+        <div>
+          <dt>{t.month.expenses}</dt>
+          <dd>{formatCup(month.gastos)}</dd>
+        </div>
+        <div>
+          <dt>{t.month.tax}</dt>
+          <dd>{formatCup(month.impuesto)}</dd>
+        </div>
+      </dl>
+      <p class="note">{t.month.taxHint}</p>
+    {/if}
+    <div class="actions">
+      <a class="btn" href={'#' + newMovementPath('ingreso')}>{t.month.addIncome}</a>
+      <a class="btn" href={'#' + newMovementPath('gasto')}>{t.month.addExpense}</a>
+    </div>
+    <div class="actions">
+      <a class="btn" href="#/registro">{t.month.seeRegistro}</a>
+      <a class="btn" href="#/calculadora">{t.month.seeCalculadora}</a>
+    </div>
+
     <h3>{t.upcomingTitle}</h3>
     {#if summary.upcoming.length === 0}
       <p>{t.upcomingNone}</p>
@@ -171,12 +220,41 @@
   .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     min-height: 44px;
     padding: 0 12px;
     border: 1px solid currentColor;
     border-radius: 8px;
     color: inherit;
     text-decoration: none;
+  }
+  .totals {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 0 4px;
+  }
+  .totals div {
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 8px;
+  }
+  .totals dt {
+    font-size: 0.8em;
+    opacity: 0.75;
+  }
+  .totals dd {
+    margin: 0;
+    font-weight: 700;
+    font-size: 0.95em;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .actions .btn {
+    flex: 1;
   }
   .note {
     font-size: 0.85em;

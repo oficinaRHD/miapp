@@ -37,4 +37,16 @@ export const inicio = {
     pronto: 'Pronto',
     tranquila: 'A tiempo',
   } satisfies Record<Urgency, string>,
+  month: {
+    title: (monthLabel: string) => `Este mes · ${monthLabel}`,
+    income: 'Ingresos',
+    expenses: 'Gastos',
+    tax: 'Impuesto estimado',
+    taxHint: 'Ventas y servicios más ISIP mensual, según tus ingresos registrados.',
+    addIncome: '+ Ingreso',
+    addExpense: '+ Gasto',
+    seeRegistro: 'Ver registro',
+    seeCalculadora: 'Calculadora',
+    loadError: 'No se pudo cargar el resumen del mes',
+  },
 } as const;
