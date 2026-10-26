@@ -128,6 +128,15 @@ Rutas con hash:
   - Opción "Pago por canal electrónico (-3 %)".
 - **Acciones**: Marcar como pagada (fecha, importe real, canal, comprobante opcional); Compartir ficha; Omitir (con motivo); Editar fecha.
 - **Estados**: pendiente, pagada, vencida, omitida.
+- **Reglas** (implementadas en `src/app/pago.ts`, con `mora.ts`, `descuento.ts` y `businessDays.ts` del dominio):
+  - Importe base: el oficial; si no hay, el estimado; si no hay ninguno, no se puede estimar recargo ni descuento.
+  - Recargo por mora: se calcula con los días hábiles entre la fecha límite y la fecha de pago (hoy en la estimación; la fecha elegida al pagar). Sin feriados, cuenta lunes a viernes y la pantalla lo avisa. Tramos de `01`, sección 4.
+  - Descuento del 3 %: solo con canal electrónico, sobre el importe base. Se desconoce si aplica también al recargo (`01` no lo dice): aquí no se aplica.
+  - **`importePagado` es el importe del tributo después del descuento, sin el recargo.** El recargo se anota aparte en `recargoMora` (es otro tributo, 1060122). Así "impuesto pagado" de V09 no mezcla mora.
+  - Marcar como pagada: fecha (no futura), importe, canal, descuento y recargo, que se rellenan con la estimación y se pueden corregir; notas opcionales. Al cambiar fecha o canal se recalculan importe y recargo.
+  - Omitir pide un motivo opcional. Una obligación pagada u omitida se puede volver a pendiente (se borran los datos del pago).
+  - La ficha ofrece copiar: RC-05 sin guiones, código de tributo, código de barras e importe (sin separadores, p. ej. `1250.50`).
+- **Estado de implementación**: hechos datos, ficha (sin el RC-05 con guiones), estimación, marcar pagada, omitir y reabrir. **Pendiente**: RC-05 con guiones (falta el formato), compartir ficha, editar fecha, código de barras e importe oficial desde esta pantalla, comprobante adjunto (v0.2) y cancelar/reprogramar los avisos al pagar (M6).
 
 ### V06 Registro (v0.1)
 - **Objetivo**: ver ingresos y gastos.

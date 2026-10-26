@@ -5,6 +5,7 @@ import {
   obligacionesRepo,
   type ObligacionDraftInput,
   type ObligacionFilter,
+  type PagoInput,
 } from '../data/repositories/obligaciones';
 
 const repo = obligacionesRepo(db);
@@ -29,6 +30,26 @@ export function addObligationDrafts(
 /** Reads obligations ordered by due date. Optional filter by state and due-date range. */
 export function listObligations(filter: ObligacionFilter = {}): Promise<Obligacion[]> {
   return repo.list(filter);
+}
+
+/** One obligation by id, or undefined. */
+export function getObligation(id: string): Promise<Obligacion | undefined> {
+  return repo.get(id);
+}
+
+/** Marks an obligation as paid. Returns the stored obligation. */
+export function markObligationPaid(id: string, pago: PagoInput): Promise<Obligacion> {
+  return repo.markPaid(id, pago);
+}
+
+/** Omits a pending obligation (a paid one is locked by the repository). */
+export function omitObligation(id: string, motivo?: string): Promise<Obligacion> {
+  return repo.markOmitted(id, motivo);
+}
+
+/** Back to pending, clearing the payment data. */
+export function reopenObligation(id: string): Promise<Obligacion> {
+  return repo.reopen(id);
 }
 
 /**
