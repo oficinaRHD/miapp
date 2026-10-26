@@ -1,5 +1,6 @@
 // Texts of V05 (Detalle y ficha de pago). Same style as src/i18n/obligaciones.ts.
 import type { DayStatus } from '../app/calendario';
+import type { EditError } from '../app/detalleEdit';
 import type { PaymentError } from '../app/pago';
 import type { CanalPago, OrigenFecha } from '../data/models';
 
@@ -91,6 +92,39 @@ export const detalle = {
     'surcharge-invalid': 'El recargo no es un importe válido.',
   } satisfies Record<PaymentError, string>,
   saveError: 'No se pudo guardar',
+
+  share: {
+    button: 'Compartir ficha',
+    title: 'Ficha de pago',
+    heading: 'Ficha de pago',
+    includeRc05: 'Incluir mi RC-05',
+    includeRc05Hint: 'Es un dato personal: se comparte solo si lo marcas.',
+    rc05Label: 'RC-05',
+    copied: 'No se pudo abrir el menú de compartir. La ficha se copió: pégala donde la necesites.',
+    failed: 'No se pudo compartir ni copiar la ficha.',
+  },
+
+  edit: {
+    title: 'Editar datos',
+    due: 'Fecha límite',
+    originVector: 'La copié de mi vector',
+    originManual: 'Es una fecha mía (manual)',
+    barcode: 'Código de barras',
+    barcodeHint: 'Como figura en tu vector, por ejemplo 764 - 16.',
+    official: 'Importe oficial',
+    officialHint: 'El que figura en tu vector, si lo hay.',
+    save: 'Guardar',
+    savedDue: 'Fecha guardada.',
+    savedBarcode: 'Código de barras guardado.',
+    savedOfficial: 'Importe oficial guardado.',
+    errors: {
+      'date-invalid': 'Escribe una fecha válida.',
+      'date-same': 'Esa es la fecha que ya tiene. Cámbiala o cambia su origen.',
+      'barcode-empty': 'Escribe el código de barras.',
+      'barcode-too-long': 'El código de barras es demasiado largo.',
+      'amount-invalid': 'Escribe un importe válido (por ejemplo 30 o 1250.50).',
+    } satisfies Record<EditError, string>,
+  },
 
   omitTitle: 'Omitir obligación',
   omitLead: 'Úsalo si esta obligación no te corresponde este período. Puedes volver a pendiente después.',

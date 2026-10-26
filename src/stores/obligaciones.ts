@@ -1,8 +1,9 @@
 // Obligations access for views. Data access goes through the obligations repository only.
 import { db } from '../data';
-import type { ISODate, Obligacion } from '../data/models';
+import type { ISODate, Obligacion, OrigenFecha } from '../data/models';
 import {
   obligacionesRepo,
+  type ObligacionChanges,
   type ObligacionDraftInput,
   type ObligacionFilter,
   type PagoInput,
@@ -50,6 +51,16 @@ export function omitObligation(id: string, motivo?: string): Promise<Obligacion>
 /** Back to pending, clearing the payment data. */
 export function reopenObligation(id: string): Promise<Obligacion> {
   return repo.reopen(id);
+}
+
+/** Changes the due date of a pending obligation and records where the date came from. */
+export function setObligationDate(id: string, vence: ISODate, origen: OrigenFecha): Promise<Obligacion> {
+  return repo.setDueDate(id, vence, origen);
+}
+
+/** Changes the official amount, barcode or notes. */
+export function updateObligation(id: string, changes: ObligacionChanges): Promise<Obligacion> {
+  return repo.update(id, changes);
 }
 
 /**

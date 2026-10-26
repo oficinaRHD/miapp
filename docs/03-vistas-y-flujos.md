@@ -117,7 +117,8 @@ Rutas con hash:
   - El año es el del período (la anual 2026, con fecha en abril de 2027, se edita en 2026). Si hay más de un año con pendientes, se puede cambiar de año.
   - Al guardar vuelve a la lista con un aviso de cuántas fechas se cambiaron y, si alguna falló, cuántas.
   - Pendiente: reprogramar los avisos de las fechas cambiadas (M6, notificaciones) y los feriados reales.
-- **Estado de implementación**: lista, filtros y edición de fechas hechos en M4.
+- **Generar el año siguiente** (`src/app/nextYear.ts`): si el año siguiente al de hoy aún no tiene obligaciones, aparece el botón "Generar obligaciones de AAAA". Muestra cuántas se crearán y el rango de fechas, y las crea con fechas **calculadas por patrón** (son una propuesta) para los tributos activos del perfil. Es idempotente. Después se ajustan con "Editar fechas del año". El año cuenta por el período, no por la fecha: un diciembre con vencimiento en enero no cuenta como del año siguiente.
+- **Estado de implementación**: lista, filtros, edición de fechas y generar el año siguiente, hechos en M4.
 
 ### V05 Detalle y ficha de pago (v0.1)
 - **Objetivo**: tener a mano todo lo necesario para pagar y registrar que se pagó.
@@ -136,7 +137,9 @@ Rutas con hash:
   - Marcar como pagada: fecha (no futura), importe, canal, descuento y recargo, que se rellenan con la estimación y se pueden corregir; notas opcionales. Al cambiar fecha o canal se recalculan importe y recargo.
   - Omitir pide un motivo opcional. Una obligación pagada u omitida se puede volver a pendiente (se borran los datos del pago).
   - La ficha ofrece copiar: RC-05 con y sin guiones, código de tributo, código de barras e importe (sin separadores, p. ej. `1250.50`).
-- **Estado de implementación**: hechos datos, ficha (RC-05 con y sin guiones, con `formatRc05` de `perfilForm.ts`), estimación, marcar pagada, omitir y reabrir. **Pendiente**: compartir ficha, editar fecha, código de barras e importe oficial desde esta pantalla, comprobante adjunto (v0.2) y cancelar/reprogramar los avisos al pagar (M6).
+- **Compartir ficha** (`src/app/ficha.ts`, `src/services/share.ts`): comparte un texto con tributo, período, fecha límite, código de barras e importe. El RC-05 va **solo si se marca** "Incluir mi RC-05" (es un dato personal). Si el sistema no puede compartir, se copia el texto y se avisa.
+- **Editar datos** (`src/app/detalleEdit.ts`): fecha límite (con origen "del vector" o "manual"), código de barras e importe oficial, solo en obligaciones pendientes. No se puede vaciar un código de barras ni un importe ya guardados (el repositorio no lo permite).
+- **Estado de implementación**: V05 completa en M4. **Pendiente**: comprobante adjunto (v0.2) y cancelar o reprogramar los avisos al pagar, omitir, reabrir o cambiar la fecha (M6, necesita el servicio de notificaciones).
 
 ### V06 Registro (v0.1)
 - **Objetivo**: ver ingresos y gastos.

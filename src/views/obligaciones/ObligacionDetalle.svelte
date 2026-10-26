@@ -1,8 +1,10 @@
 <script lang="ts">
   // V05: obligation detail, payment sheet (copy buttons), estimate (late surcharge and 3 % discount),
   // and the actions: mark as paid, omit, back to pending.
-  import type { Obligacion } from '../../data/models';
+  import type { Obligacion, OrigenFecha } from '../../data/models';
   import { statusOf } from '../../app/calendario';
+  import { checkBarcode, checkDueDate, checkOfficialAmount, type EditError } from '../../app/detalleEdit';
+  import { buildSheetText } from '../../app/ficha';
   import { formatDate } from '../../app/format';
   import {
     plainAmount,
@@ -23,11 +25,14 @@
   import { findTributo } from '../../domain/tributos.catalog';
   import { detalle as t } from '../../i18n/detalle';
   import { copyText } from '../../services/clipboard';
+  import { shareText } from '../../services/share';
   import {
     getObligation,
     markObligationPaid,
     omitObligation,
     reopenObligation,
+    setObligationDate,
+    updateObligation,
   } from '../../stores/obligaciones';
   import { errorMessage, perfilStore } from '../../stores/perfil.svelte';
   import type { CanalPago } from '../../data/models';
@@ -54,6 +59,15 @@
   let failure = $state<string | null>(null);
   let copied = $state<string | null>(null);
   let copyFailed = $state(false);
+  let includeRc05 = $state(false);
+  let shareNotice = $state<string | null>(null);
+  // Inline edits (date, barcode, official amount).
+  let editDue = $state('');
+  let editOrigin = $state<OrigenFecha>('vector');
+  let editBarcode = $state('');
+  let editOfficial = $state('');
+  let editError = $state<string | null>(null);
+  let editNotice = $state<string | null>(null);
 
   const id = $derived(router.route.params['id']);
   const tributo = $derived(o ? findTributo(o.tributoCodigo) : undefined);
@@ -61,12 +75,24 @@
   const errors = $derived(validatePayment(form, today));
   const rc05 = $derived(perfilStore.perfil?.rc05);
 
+  /** Fills the edit fields with the stored values. */
+  function syncEdits(): void {
+    editDue = o?.vence ?? '';
+    editOrigin = o?.venceOrigen === 'manual' ? 'manual' : 'vector';
+    editBarcode = o?.codigoBarras ?? '';
+    editOfficial = o?.importeOficial !== undefined ? formatCup(o.importeOficial, false) : '';
+  }
+
   async function load(current: string): Promise<void> {
     loading = true;
     try {
       o = await getObligation(current);
       error = null;
       mode = 'ver';
+      editError = null;
+      editNotice = null;
+      shareNotice = null;
+      syncEdits();
     } catch (e) {
       error = errorMessage(e);
     } finally {
@@ -84,6 +110,69 @@
     copyFailed = !ok;
     copied = ok ? key : null;
     if (ok) setTimeout(() => (copied === key ? (copied = null) : undefined), 2000);
+  }
+
+  async function shareSheet(): Promise<void> {
+    const cur = o;
+    if (!cur) return;
+    const text = buildSheetText({
+      tributoName: tributo?.name ?? cur.tributoCodigo,
+      tributoCodigo: cur.tributoCodigo,
+      periodoEtiqueta: cur.periodoEtiqueta,
+      vence: cur.vence,
+      codigoBarras: cur.codigoBarras,
+      importe: quote?.toPay ?? null,
+      rc05: includeRc05 && rc05 ? formatRc05(rc05, false) : undefined,
+    });
+    const result = await shareText(t.share.title, text);
+    shareNotice =
+      result === 'copied' ? t.share.copied : result === 'failed' ? t.share.failed : null;
+  }
+
+  /** Runs one inline edit: shows the notice or the error, and refreshes the fields. */
+  async function runEdit(action: () => Promise<Obligacion>, okMessage: string): Promise<void> {
+    busy = true;
+    failure = null;
+    editError = null;
+    editNotice = null;
+    try {
+      o = await action();
+      syncEdits();
+      editNotice = okMessage;
+    } catch (e) {
+      failure = errorMessage(e);
+    } finally {
+      busy = false;
+    }
+  }
+
+  function showEditError(error: EditError): void {
+    editNotice = null;
+    editError = t.edit.errors[error];
+  }
+
+  async function saveDue(): Promise<void> {
+    const cur = o;
+    if (!cur) return;
+    const checked = checkDueDate(editDue, cur, editOrigin);
+    if (!checked.ok) return showEditError(checked.error);
+    await runEdit(() => setObligationDate(cur.id, checked.value, editOrigin), t.edit.savedDue);
+  }
+
+  async function saveBarcode(): Promise<void> {
+    const cur = o;
+    if (!cur) return;
+    const checked = checkBarcode(editBarcode);
+    if (!checked.ok) return showEditError(checked.error);
+    await runEdit(() => updateObligation(cur.id, { codigoBarras: checked.value }), t.edit.savedBarcode);
+  }
+
+  async function saveOfficial(): Promise<void> {
+    const cur = o;
+    if (!cur) return;
+    const checked = checkOfficialAmount(editOfficial);
+    if (!checked.ok) return showEditError(checked.error);
+    await runEdit(() => updateObligation(cur.id, { importeOficial: checked.value }), t.edit.savedOfficial);
   }
 
   function startPay(): void {
@@ -196,6 +285,17 @@
       {#if copyFailed}
         <p class="error" role="alert">{t.copyFailed}</p>
       {/if}
+      <button type="button" onclick={shareSheet}>{t.share.button}</button>
+      {#if rc05}
+        <label class="check">
+          <input type="checkbox" bind:checked={includeRc05} />
+          <span>{t.share.includeRc05}</span>
+        </label>
+        <p class="hint">{t.share.includeRc05Hint}</p>
+      {/if}
+      {#if shareNotice}
+        <p class="notice" role="status">{shareNotice}</p>
+      {/if}
 
       <h3>{t.estimateTitle}</h3>
       {#if quote}
@@ -231,6 +331,52 @@
         {/if}
         <p class="hint">{t.notes.estimate}</p>
       {/if}
+
+      <details class="edit">
+        <summary>{t.edit.title}</summary>
+
+        <label for="ed-due">{t.edit.due}</label>
+        <input id="ed-due" type="date" bind:value={editDue} />
+        <label class="check">
+          <input
+            type="radio"
+            name="ed-origin"
+            checked={editOrigin === 'vector'}
+            onchange={() => (editOrigin = 'vector')}
+          />
+          <span>{t.edit.originVector}</span>
+        </label>
+        <label class="check">
+          <input
+            type="radio"
+            name="ed-origin"
+            checked={editOrigin === 'manual'}
+            onchange={() => (editOrigin = 'manual')}
+          />
+          <span>{t.edit.originManual}</span>
+        </label>
+        <button type="button" onclick={saveDue} disabled={busy}>{t.edit.save}</button>
+
+        <label for="ed-barcode">{t.edit.barcode}</label>
+        <input id="ed-barcode" type="text" autocomplete="off" bind:value={editBarcode} />
+        <p class="hint">{t.edit.barcodeHint}</p>
+        <button type="button" onclick={saveBarcode} disabled={busy}>{t.edit.save}</button>
+
+        <label for="ed-official">{t.edit.official}</label>
+        <input id="ed-official" type="text" inputmode="decimal" autocomplete="off" bind:value={editOfficial} />
+        <p class="hint">{t.edit.officialHint}</p>
+        <button type="button" onclick={saveOfficial} disabled={busy}>{t.edit.save}</button>
+
+        {#if editError}
+          <p class="error" role="alert">{editError}</p>
+        {/if}
+        {#if editNotice}
+          <p class="notice" role="status">{editNotice}</p>
+        {/if}
+        {#if failure && mode === 'ver'}
+          <p class="error" role="alert">{t.saveError}: {failure}</p>
+        {/if}
+      </details>
 
       {#if mode === 'ver'}
         <div class="actions">
@@ -465,6 +611,26 @@
   }
   .error {
     color: #d32f2f;
+  }
+  .notice {
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+  }
+  .edit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 8px;
+  }
+  .edit summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
   }
   .chip.s-vencida,
   .chip.s-urgente {

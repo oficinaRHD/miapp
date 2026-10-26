@@ -3,6 +3,8 @@
   import type { Obligacion } from '../../data/models';
   import { statusOf } from '../../app/calendario';
   import { formatDate } from '../../app/format';
+  import { nextYearPlan, nextYearToGenerate } from '../../app/nextYear';
+  import { planSummary } from '../../app/yearDates';
   import {
     FILTERS,
     amountOf,
@@ -15,8 +17,8 @@
   import { formatCup } from '../../domain/money';
   import { findTributo } from '../../domain/tributos.catalog';
   import { obligaciones as t } from '../../i18n/obligaciones';
-  import { listObligations, type SaveResult } from '../../stores/obligaciones';
-  import { errorMessage } from '../../stores/perfil.svelte';
+  import { addObligationDrafts, listObligations, type SaveResult } from '../../stores/obligaciones';
+  import { errorMessage, perfilStore } from '../../stores/perfil.svelte';
   import EditarFechas from './EditarFechas.svelte';
 
   const today = localISODate(new Date());
@@ -27,6 +29,16 @@
   let filter = $state<ObligationFilter>('pendientes');
   let editing = $state(false);
   let notice = $state<string | null>(null);
+
+  // Next year (the period's fiscal year): offered while it has no obligations yet.
+  let generating = $state(false);
+  let genBusy = $state(false);
+  let genError = $state<string | null>(null);
+  const nextYear = $derived(nextYearToGenerate(all, today));
+  const genPlan = $derived(
+    nextYear === null ? [] : nextYearPlan(perfilStore.perfil?.tributosActivos ?? [], nextYear),
+  );
+  const genSummary = $derived(planSummary(genPlan));
 
   const counts = $derived(filterCounts(all, today));
   const groups = $derived(groupByDueMonth(filterObligations(all, filter, today)));
@@ -53,6 +65,23 @@
         ? base
         : `${base} ${t.editDates.failed(result.failed.length)}: ${result.failed[0]!.message}`;
     if (result.updated > 0) await load();
+  }
+
+  async function confirmGenerate(): Promise<void> {
+    const year = nextYear;
+    if (year === null) return;
+    genBusy = true;
+    genError = null;
+    try {
+      const { added } = await addObligationDrafts(genPlan);
+      generating = false;
+      notice = t.nextYear.created(added, year);
+      await load();
+    } catch (e) {
+      genError = errorMessage(e);
+    } finally {
+      genBusy = false;
+    }
   }
 
   function tributoName(code: string): string {
@@ -93,6 +122,44 @@
         notice = null;
         editing = true;
       }}>{t.editDates.button}</button>
+
+    {#if nextYear !== null && !generating}
+      <button
+        type="button"
+        class="edit"
+        onclick={() => {
+          notice = null;
+          genError = null;
+          generating = true;
+        }}>{t.nextYear.button(nextYear)}</button>
+    {/if}
+
+    {#if generating && nextYear !== null}
+      <div class="panel">
+        <h3>{t.nextYear.title(nextYear)}</h3>
+        <p>{t.nextYear.lead}</p>
+        {#if genSummary.first && genSummary.last}
+          <p>
+            <strong>{t.nextYear.summary(genSummary.count, formatDate(genSummary.first), formatDate(genSummary.last))}</strong>
+          </p>
+        {:else}
+          <p>{t.nextYear.none}</p>
+        {/if}
+        <p class="note">{t.nextYear.holidaysNote}</p>
+        {#if genError}
+          <p class="error" role="alert">{t.nextYear.error}: {genError}</p>
+        {/if}
+        <div class="row">
+          <button type="button" onclick={() => (generating = false)} disabled={genBusy}>
+            {t.nextYear.cancel}
+          </button>
+          <button
+            type="button"
+            onclick={confirmGenerate}
+            disabled={genBusy || genSummary.count === 0}>{t.nextYear.confirm}</button>
+        </div>
+      </div>
+    {/if}
 
     {#if notice}
       <p class="notice" role="status">{notice}</p>
@@ -154,6 +221,38 @@
   }
   .n {
     opacity: 0.75;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+  }
+  .panel h3,
+  .panel p {
+    margin: 0;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+  }
+  .row button {
+    flex: 1;
+    min-height: 44px;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+  .row button:disabled {
+    opacity: 0.5;
+  }
+  .error {
+    color: #d32f2f;
   }
   .notice {
     margin: 12px 0 0;

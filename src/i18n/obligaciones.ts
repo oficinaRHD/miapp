@@ -55,4 +55,18 @@ export const obligaciones = {
     holidaysNote: 'Las fechas calculadas aún no tienen en cuenta los feriados.',
     estimateNotice: 'Estimación orientativa. Confirma con tu vector fiscal.',
   },
+  nextYear: {
+    button: (year: number) => `Generar obligaciones de ${year}`,
+    title: (year: number) => `Generar obligaciones de ${year}`,
+    lead: 'Se crean con fechas calculadas por patrón. Después ajústalas con tu vector en "Editar fechas del año".',
+    summary: (count: number, first: string, last: string) =>
+      `Se crearán ${count} obligaciones, del ${first} al ${last}.`,
+    none: 'Con los tributos activos no hay obligaciones periódicas que crear.',
+    holidaysNote: 'Las fechas calculadas aún no tienen en cuenta los feriados.',
+    confirm: 'Crear obligaciones',
+    cancel: 'Cancelar',
+    created: (count: number, year: number) =>
+      count === 1 ? `Se creó 1 obligación de ${year}.` : `Se crearon ${count} obligaciones de ${year}.`,
+    error: 'No se pudieron crear las obligaciones',
+  },
 } as const;
