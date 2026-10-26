@@ -135,8 +135,8 @@ Rutas con hash:
   - **`importePagado` es el importe del tributo después del descuento, sin el recargo.** El recargo se anota aparte en `recargoMora` (es otro tributo, 1060122). Así "impuesto pagado" de V09 no mezcla mora.
   - Marcar como pagada: fecha (no futura), importe, canal, descuento y recargo, que se rellenan con la estimación y se pueden corregir; notas opcionales. Al cambiar fecha o canal se recalculan importe y recargo.
   - Omitir pide un motivo opcional. Una obligación pagada u omitida se puede volver a pendiente (se borran los datos del pago).
-  - La ficha ofrece copiar: RC-05 sin guiones, código de tributo, código de barras e importe (sin separadores, p. ej. `1250.50`).
-- **Estado de implementación**: hechos datos, ficha (sin el RC-05 con guiones), estimación, marcar pagada, omitir y reabrir. **Pendiente**: RC-05 con guiones (falta el formato), compartir ficha, editar fecha, código de barras e importe oficial desde esta pantalla, comprobante adjunto (v0.2) y cancelar/reprogramar los avisos al pagar (M6).
+  - La ficha ofrece copiar: RC-05 con y sin guiones, código de tributo, código de barras e importe (sin separadores, p. ej. `1250.50`).
+- **Estado de implementación**: hechos datos, ficha (RC-05 con y sin guiones, con `formatRc05` de `perfilForm.ts`), estimación, marcar pagada, omitir y reabrir. **Pendiente**: compartir ficha, editar fecha, código de barras e importe oficial desde esta pantalla, comprobante adjunto (v0.2) y cancelar/reprogramar los avisos al pagar (M6).
 
 ### V06 Registro (v0.1)
 - **Objetivo**: ver ingresos y gastos.

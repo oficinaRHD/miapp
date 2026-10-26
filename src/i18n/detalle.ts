@@ -39,6 +39,7 @@ export const detalle = {
   copyFailed: 'No se pudo copiar',
   fields: {
     rc05: 'RC-05 sin guiones',
+    rc05Hyphens: 'RC-05 con guiones',
     tributo: 'Código de tributo',
     barras: 'Código de barras',
     importe: 'Importe a pagar',

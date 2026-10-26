@@ -16,6 +16,7 @@
     validatePayment,
     type PaymentForm,
   } from '../../app/pago';
+  import { formatRc05 } from '../../app/perfilForm';
   import { router } from '../../app/router.svelte';
   import { localISODate } from '../../domain/dates';
   import { formatCup } from '../../domain/money';
@@ -176,7 +177,8 @@
       <h3>{t.sheetTitle}</h3>
       <p class="hint">{t.sheetHint}</p>
       {#if rc05}
-        {@render copyRow('rc05', t.fields.rc05, rc05)}
+        {@render copyRow('rc05', t.fields.rc05, formatRc05(rc05, false))}
+        {@render copyRow('rc05h', t.fields.rc05Hyphens, formatRc05(rc05, true))}
       {:else}
         <p class="hint">{t.rc05Missing}</p>
       {/if}
