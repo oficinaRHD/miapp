@@ -17,6 +17,7 @@
   import Perfil from './views/perfil/Perfil.svelte';
   import Movimiento from './views/registro/Movimiento.svelte';
   import Registro from './views/registro/Registro.svelte';
+  import Calculadora from './views/calculadora/Calculadora.svelte';
 
   const links = [
     ['/', 'inicio'],
@@ -24,6 +25,7 @@
     ['/calendario', 'calendario'],
     ['/obligaciones', 'obligaciones'],
     ['/registro', 'registro'],
+    ['/calculadora', 'calculadora'],
     ['/ajustes/perfil', 'perfil'],
     ['/ajustes/respaldo', 'respaldo'],
     ['/no-existe', '404'],
@@ -67,6 +69,8 @@
         <Obligaciones />
       {:else if router.route.name === 'obligacion'}
         <ObligacionDetalle />
+      {:else if router.route.path === '/calculadora'}
+        <Calculadora />
       {:else if registro?.kind === 'list'}
         <Registro />
       {:else if registro?.kind === 'new'}
