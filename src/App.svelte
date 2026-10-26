@@ -16,7 +16,7 @@
   import Inicio from './views/inicio/Inicio.svelte';
   import Perfil from './views/perfil/Perfil.svelte';
   import Movimiento from './views/registro/Movimiento.svelte';
-  import RegistroTemp from './views/registro/RegistroTemp.svelte';
+  import Registro from './views/registro/Registro.svelte';
 
   const links = [
     ['/', 'inicio'],
@@ -68,7 +68,7 @@
       {:else if router.route.name === 'obligacion'}
         <ObligacionDetalle />
       {:else if registro?.kind === 'list'}
-        <RegistroTemp />
+        <Registro />
       {:else if registro?.kind === 'new'}
         {#key router.route.path}
           <Movimiento tipo={tipoFromHash(window.location.hash)} />
