@@ -43,7 +43,7 @@ Rutas con hash:
 - **Objetivo**: dejar la app lista en menos de 3 minutos.
 - **Pasos**: (1) bienvenida y aviso de que todo queda en el teléfono; (2) perfil: nombre visible, actividad, ¿tiene empleados?; (3) tributos que le aplican, marcados según su vector fiscal; (4) permiso de notificaciones; (5) fechas del año: elegir "Usar patrón" o "Copiar del vector" y confirmar. Se crean las obligaciones del año en curso cuya fecha calculada cae desde el día 1 del mes actual; las de meses anteriores no se crean. Con "Copiar del vector" se escribe la fecha de cada periodo y lo que quede en blanco usa el patrón.
 - **Escribe**: Perfil, Ajustes, Obligaciones del año.
-- **Vacíos/errores**: si se deniega el permiso de notificaciones, continuar y mostrar un aviso en Inicio (el estado queda en Ajustes, clave `notificacionesPermiso`). No se guarda nada hasta el último paso; si el guardado falla, el perfil no queda completo y se puede reintentar.
+- **Vacíos/errores**: si se deniega el permiso de notificaciones, continuar y mostrar un aviso en Inicio (el estado queda en Ajustes, clave `notificacionesPermiso`). No se guarda nada hasta el último paso; si el guardado falla, el perfil no queda completo y se puede reintentar. Mientras el onboarding no esté completo solo se puede entrar a `#/onboarding` y a `#/ajustes/respaldo` (V15), para restaurar un respaldo en un teléfono nuevo sin rehacer el asistente.
 
 ### V02 Inicio (v0.1)
 - **Objetivo**: responder "¿qué tengo que pagar y qué hago hoy?"
@@ -63,7 +63,7 @@ Rutas con hash:
   - Importe de la tarjeta: oficial ("según el vector"), si no estimado (con `~`), si no "Importe por definir". Siempre con el aviso de importes orientativos.
 - **Estado de implementación**:
   - Hecho en M4: saludo, alertas de vencidas y de notificaciones denegadas, próximo vencimiento, próximos 30 días, vencidas.
-  - Llega en M5: resumen del mes y botones "+ Ingreso" y "+ Gasto" (necesitan movimientos y calculadora).
+  - Hecho en M5: sección "Este mes" con ingresos, gastos e impuesto estimado (0114022 + 0510122, con las mismas bases que V08 y sin descuento), botones "+ Ingreso" y "+ Gasto" (abren V07 con el tipo elegido) y enlaces a Registro y Calculadora. El resumen se carga por separado: si falla, las obligaciones se ven igual (`src/app/inicioMes.ts`).
   - Llega en M6: alerta "hace X días sin respaldo" (necesita guardar la fecha del último respaldo) y el enlace a V16.
   - La barra inferior de navegación se añade cuando existan las vistas de las 5 pestañas.
 
@@ -143,20 +143,40 @@ Rutas con hash:
 
 ### V06 Registro (v0.1)
 - **Objetivo**: ver ingresos y gastos.
-- **Contenido**: selector de mes, totales arriba, lista de movimientos con categoría, monto y marca de "justificado". Filtro Ingresos/Gastos.
+- **Contenido**: selector de mes (`‹` `›`), totales arriba (ingresos, gastos, neto), lista de movimientos con categoría, monto y marca de "justificado". Filtro Todos, Ingresos y Gastos.
 - **Acciones**: tocar abre V07; botón "+" flotante.
-- **Vacío**: ilustración y botón "Registrar el primer ingreso".
+- **Vacío**: mensaje y botón "Registrar el primer ingreso".
+- **Reglas** (implementadas en `src/app/registro.ts` y `src/app/registroMonth.ts`):
+  - Abre en el mes actual. Los totales son del mes completo y **no dependen del filtro**; el filtro solo cambia la lista. Un neto negativo se muestra con `-` delante.
+  - Lista agrupada por día (el más reciente primero). Cada fila: descripción (o la categoría si no hay), categoría y cliente o proveedor, monto con `+` o `-`, y "Con comprobante" en los gastos justificados. Borde verde en ingresos y rojo en gastos.
+  - El botón "+" abre un gasto nuevo si el filtro es Gastos y un ingreso en cualquier otro caso. Es fijo abajo a la derecha: subirlo cuando exista la barra inferior.
+- **Estado de implementación**: hecho en M5.
 
 ### V07 Movimiento (v0.1)
 - **Objetivo**: registrar un ingreso o gasto en pocos toques.
 - **Campos**: tipo, monto, fecha (por defecto hoy), categoría, descripción, cliente o proveedor, método (efectivo, transferencia, otro), "¿Cuenta para el impuesto de ventas y servicios?" (por defecto sí en ingresos), "¿Tengo comprobante?" (justificado), adjunto (v0.2).
 - **Acciones**: Guardar, Guardar y añadir otro, Eliminar (con deshacer).
-- **Validaciones**: monto mayor que 0, fecha válida.
+- **Validaciones**: monto mayor que 0, fecha válida, categoría existente y del mismo tipo.
+- **Reglas** (implementadas en `src/app/registro.ts` y `src/app/registroRoutes.ts`):
+  - El monto se escribe como `1250.50`, `1,250.50` o `1.250,50` (hasta 2 decimales). Un solo separador seguido de exactamente 3 dígitos se lee como miles (`1.234` = 1,234.00).
+  - El tipo inicial viene de `#/registro/nuevo?tipo=gasto`; sin parámetro, ingreso. Al cambiar de tipo se vacía la categoría si era del otro tipo.
+  - Un gasto nunca cuenta para ventas y un ingreso nunca es "justificado" (esa marca es para la regla del 80 % de gastos). Ingreso muestra "Cuenta para el impuesto de ventas y servicios"; gasto muestra "Tengo comprobante".
+  - Guardar vuelve a V06. "Guardar y añadir otro" (solo al crear) limpia monto, descripción y cliente, y conserva tipo, fecha, categoría y método.
+  - Editar reemplaza el registro completo, así que vaciar la descripción o el cliente funciona.
+  - Eliminar es inmediato; "Deshacer" aparece en la misma pantalla (si se sale sin deshacer, queda eliminado).
+- **Estado de implementación**: hecho en M5. Adjunto: v0.2.
 
 ### V08 Calculadora del mes (v0.1)
 - **Objetivo**: estimar lo que corresponde pagar por un mes.
-- **Contenido**: toma los ingresos del mes de V06 (editable) y muestra desglose de 0114022 y 0510122, total estimado, y total con descuento del 3 % si paga electrónicamente. Aviso: "Estimación orientativa. Confirma con tu vector fiscal".
-- **Acciones**: "Usar como importe estimado" en la obligación del mes.
+- **Contenido**: selector de mes y dos campos editables que parten del registro: ingresos por ventas y servicios (los marcados en V07) e ingresos totales. Desglose de 0114022 (base, tasa e impuesto) y de 0510122 (base, mínimo exento, tasa e impuesto), total estimado, y un bloque "Si pagas por canal electrónico" con el total con descuento. Aviso: "Estimación orientativa. Confirma con tu vector fiscal".
+- **Acciones**: "Usar como importe estimado" en la obligación del mes, por cada tributo; "Usar los del registro" restablece las cifras.
+- **Reglas** (implementadas en `src/app/calculadora.ts` y `src/app/calculadoraLink.ts`, con `ventas.ts`, `isipMensual.ts` y `descuento.ts` del dominio):
+  - Según `01`, sección 3: 0114022 se calcula sobre los ingresos por ventas y servicios; 0510122, sobre los **ingresos totales** del mes.
+  - Cero se acepta; vacío o texto no válido, no; ventas mayores que ingresos totales, no (se oculta el resultado).
+  - El descuento se aplica a cada impuesto por separado (cada uno se paga en su obligación), con redondeo por pago. Sigue sin saberse si aplica también al recargo por mora (`01` no lo dice).
+  - "Usar como importe estimado" guarda el impuesto **sin descuento** en `importeEstimado` de la obligación **pendiente** mensual cuyo período es el mes de los ingresos (`2026-10`; vence en noviembre). Si no existe, o está pagada u omitida, se explica y no hay botón. Si ya tiene importe oficial, se avisa de que V05 muestra el oficial. Si el estimado guardado ya es igual, tampoco hay botón.
+  - No se consideran las excepciones del vector (agentes de telecomunicaciones y de seguros).
+- **Estado de implementación**: hecho en M5.
 
 ### V09 Estadísticas (v0.2)
 - **Contenido**: ingresos y gastos por mes (barras), neto, impuesto estimado vs pagado, % de pagos a tiempo, gastos por categoría, acumulado del año frente al límite de 500,000.
@@ -214,7 +234,7 @@ Rutas con hash:
 
 **F3 Pagar una obligación**: aviso del sistema o V02, V05, copiar datos de la ficha, pagar fuera de la app, volver, "Marcar como pagada" (fecha, importe, canal), se cancelan los avisos pendientes y la obligación pasa a pagada. Si fue tarde, se anota el recargo por mora.
 
-**F4 Cierre de mes**: aviso de fin de mes, V06 para completar movimientos, V08 para estimar, "Usar como importe estimado", se actualiza V05 de las obligaciones del mes siguiente.
+**F4 Cierre de mes**: aviso de fin de mes, V06 para completar movimientos, V08 para estimar, "Usar como importe estimado", se actualiza el importe estimado de las obligaciones de ese mes (que vencen el mes siguiente).
 
 **F5 Respaldo**: V15, Exportar, compartir el archivo a WhatsApp, correo o almacenamiento, queda registrada la fecha del último respaldo.
 
