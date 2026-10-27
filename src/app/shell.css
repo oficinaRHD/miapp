@@ -1,0 +1,139 @@
+/* App shell: color tokens, safe areas and base element styles.
+   Imported after theme.css (see main.ts). Dark mode follows the phone; a future "Apariencia"
+   setting can force it with <html data-theme="light|dark">. */
+:root {
+  /* Phone bars. env() works on WebView 140+, --safe-area-inset-* is injected by Capacitor's SystemBars (css mode). */
+  --sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --sab: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+  --sal: max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+  --sar: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+
+  color-scheme: light;
+  --bg: #f3f7f5;
+  --surface: #ffffff;
+  --text: #14231c;
+  --muted: #566860;
+  --line: #dbe5df;
+  --primary: #0b6e4f;
+  --primary-text: #ffffff;
+  --primary-soft: #e0f1ea;
+  --danger: #b3261e;
+  --shadow: 0 1px 2px rgba(16, 40, 30, 0.06), 0 4px 14px rgba(16, 40, 30, 0.06);
+  --shadow-lg: 0 10px 30px rgba(16, 40, 30, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0d1411;
+    --surface: #16201b;
+    --text: #e7f0ea;
+    --muted: #9bada3;
+    --line: #26332c;
+    --primary: #3ecf9a;
+    --primary-text: #05261a;
+    --primary-soft: #1a2c24;
+    --danger: #ff8a80;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0d1411;
+  --surface: #16201b;
+  --text: #e7f0ea;
+  --muted: #9bada3;
+  --line: #26332c;
+  --primary: #3ecf9a;
+  --primary-text: #05261a;
+  --primary-soft: #1a2c24;
+  --danger: #ff8a80;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Zero-specificity base: any view style still wins over these. */
+:where(#app) h1 {
+  margin: 8px 0 12px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+:where(#app) h2 {
+  font-size: 1.05rem;
+}
+:where(#app) a {
+  color: var(--primary);
+}
+:where(#app) button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--primary-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+:where(#app) button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+:where(#app) input:not([type='checkbox']):not([type='radio']),
+:where(#app) select,
+:where(#app) textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px; /* 16px avoids the zoom on focus */
+}
+:where(#app) input[type='checkbox'],
+:where(#app) input[type='radio'] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary);
+}
+:where(#app) :focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Cards and list items of the views (their own styles use currentColor borders). */
+#app .card,
+#app .item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+#app .note {
+  color: var(--muted);
+  opacity: 1;
+}
+#app .error,
+#app p[role='alert'] {
+  color: var(--danger);
+}
+#app .item span {
+  color: var(--muted);
+  opacity: 1;
+}

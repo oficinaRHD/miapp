@@ -25,20 +25,9 @@
   import Notificaciones from './views/notificaciones/Notificaciones.svelte';
   import Ajustes from './views/ajustes/Ajustes.svelte';
   import Acerca from './views/ajustes/Acerca.svelte';
-
-  const links = [
-    ['/', 'inicio'],
-    ['/onboarding', 'onboarding'],
-    ['/calendario', 'calendario'],
-    ['/obligaciones', 'obligaciones'],
-    ['/registro', 'registro'],
-    ['/calculadora', 'calculadora'],
-    ['/ajustes', 'ajustes'],
-    ['/ajustes/perfil', 'perfil'],
-    ['/ajustes/respaldo', 'respaldo'],
-    ['/ajustes/notificaciones', 'notificaciones'],
-    ['/no-existe', '404'],
-  ] as const;
+  import Menu from './views/shell/Menu.svelte';
+  import { esNav } from './i18n/nav';
+  import { showMenu } from './app/nav';
 
   // Registro paths are read from the path itself, so this does not depend on route names.
   const registro = $derived(registroRoute(router.route.path));
@@ -74,6 +63,13 @@
   });
 </script>
 
+<div class="shell">
+  <header class="appbar">
+    <span class="brand">{esNav.appName}</span>
+    {#if perfilStore.loaded && !perfilStore.error && showMenu(isOnboardingDone())}
+      <Menu />
+    {/if}
+  </header>
 <main>
   {#if perfilStore.error}
     <h1>{es.appName}</h1>
@@ -131,32 +127,37 @@
     </svelte:boundary>
     {/key}
 
-    <nav>
-      {#each links as [path, label]}
-        <a href={'#' + path}>{label}</a>
-      {/each}
-    </nav>
   {/if}
 </main>
+</div>
 
 <style>
-  main {
-    padding: 16px;
+  .shell {
+    min-height: 100dvh;
+    padding: 0 var(--sar) 0 var(--sal);
+    box-sizing: border-box;
   }
-  nav {
+  .appbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-  }
-  nav a {
-    display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    padding: 0 12px;
-    border: 1px solid currentColor;
-    border-radius: 8px;
-    color: inherit;
-    text-decoration: none;
+    justify-content: space-between;
+    min-height: calc(56px + var(--sat));
+    padding: var(--sat) 16px 4px;
+    box-sizing: border-box;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+  main {
+    padding: 16px 16px calc(24px + var(--sab));
+    max-width: 720px;
+    margin: 0 auto;
   }
 </style>

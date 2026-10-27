@@ -4,7 +4,9 @@
 
 ## 1. Navegación
 
-Barra inferior con 5 pestañas:
+**Decisión (27/10/2026)**: en v0.1 la navegación es un **menú desplegable [☰]** en la barra superior (`src/app/nav.ts`, `src/views/shell/Menu.svelte`) con Inicio, Calendario, Obligaciones, Registro, Calculadora y Ajustes. Perfil, Notificaciones, Respaldo y Acerca de están dentro de Ajustes (V14). La barra inferior de 5 pestañas queda aplazada; si se retoma, el botón "+" de V06 debe subir sobre ella. La app respeta las barras del teléfono con `--sat`, `--sab`, `--sal` y `--sar` (`src/app/shell.css`).
+
+Diseño original (aplazado): barra inferior con 5 pestañas:
 
 | Pestaña | Vista raíz |
 |---|---|
@@ -68,7 +70,7 @@ Rutas con hash:
   - Hecho en M5: resumen "Este mes" (ingresos, gastos e impuesto estimado = 0114022 + 0510122 con las mismas bases que V08, sin descuento; se lee al abrir Inicio y, si falla, las obligaciones se ven igual), botones "+ Ingreso" y "+ Gasto" (abren V07 con el tipo elegido) y enlaces a Registro y Calculadora.
   - Hecho en M6: alerta "sin respaldo" (`src/app/inicioRespaldo.ts`): sale si nunca se hizo un respaldo o el último tiene 30 días o más, y se oculta si el recordatorio mensual de V15 está desactivado. Enlaza a V15.
   - El botón "Ajustes" (`#/ajustes`) abre V14.
-  - La barra inferior de navegación se añade cuando existan las vistas de las 5 pestañas.
+  - La navegación es el menú desplegable [☰] (ver sección 1).
 
 ```
 +------------------------------+
@@ -155,7 +157,7 @@ Rutas con hash:
   - Abre en el mes actual; `‹` y `›` cambian de mes.
   - El botón "+" abre un gasto nuevo si el filtro es Gastos; en cualquier otro caso, un ingreso.
   - Sin movimientos en el mes: "Registrar el primer ingreso". Con filtro sin resultados: solo el mensaje.
-- **Estado de implementación**: hecho en M5. Pendiente: ajustar el botón "+" a la barra inferior cuando exista.
+- **Estado de implementación**: hecho en M5. El botón "+" no necesita ajuste mientras la navegación sea el menú desplegable.
 
 ### V07 Movimiento (v0.1)
 - **Objetivo**: registrar un ingreso o gasto en pocos toques.
