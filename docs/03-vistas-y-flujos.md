@@ -36,6 +36,7 @@ Rutas con hash:
 #/ajustes                  V14
 #/ajustes/respaldo         V15
 #/ajustes/notificaciones   V16
+#/ajustes/apariencia       V14 (Apariencia)
 #/ajustes/acerca           V14 (Acerca de)
 #/ajustes/perfil           V17
 ```
@@ -208,7 +209,7 @@ Rutas con hash:
 ### V14 Ajustes (v0.1)
 - Hub con accesos a Perfil, Notificaciones, Respaldo, Feriados, Apariencia (claro/oscuro), Acerca de (versión de la app y de las reglas).
 - **Regla** (`src/app/ajustesMenu.ts`): la lista y su orden salen de `AJUSTES_MENU`; una entrada sin ruta se muestra atenuada con "Próximamente".
-- **Estado de implementación**: hub hecho en M6 con enlaces a Perfil, Notificaciones y Respaldo. Acerca de hecho (`#/ajustes/acerca`: versión de la app, versión de las reglas y el aviso de cálculos orientativos). Pendiente: Feriados (lista editable; faltan los feriados reales, `01` sección 7) y Apariencia (tema claro/oscuro).
+- **Estado de implementación**: hub hecho en M6 con enlaces a Perfil, Notificaciones y Respaldo. Acerca de hecho (`#/ajustes/acerca`: versión de la app, versión de las reglas y el aviso de cálculos orientativos). Apariencia hecha (`#/ajustes/apariencia`: Automático, Claro u Oscuro; se guarda en `ajustes`, clave `tema`, y se aplica con `data-theme` en `<html>`). Pendiente: Feriados (lista editable; faltan los feriados reales, `01` sección 7).
 
 ### V15 Respaldo y datos (v0.1)
 - Exportar respaldo y compartirlo, importar desde archivo, fecha del último respaldo, recordatorio mensual, opción "incluir datos personales", borrar todos los datos (doble confirmación).

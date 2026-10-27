@@ -25,6 +25,8 @@
   import Notificaciones from './views/notificaciones/Notificaciones.svelte';
   import Ajustes from './views/ajustes/Ajustes.svelte';
   import Acerca from './views/ajustes/Acerca.svelte';
+  import Apariencia from './views/ajustes/Apariencia.svelte';
+  import { initTema } from './stores/tema';
   import Menu from './views/shell/Menu.svelte';
   import { esNav } from './i18n/nav';
   import { showMenu } from './app/nav';
@@ -35,6 +37,7 @@
   onMount(() => {
     const stop = initRouter();
     void startApp();
+    void initTema();
     // Back in the foreground: recalculate the notices. A tap on a notice opens its view (obligation or reminder route).
     const stopResume = onAppResume(() => {
       if (isOnboardingDone()) void rescheduleNotices();
@@ -85,6 +88,8 @@
         <Onboarding />
       {:else if router.route.path === '/ajustes'}
         <Ajustes />
+      {:else if router.route.path === '/ajustes/apariencia'}
+        <Apariencia />
       {:else if router.route.path === '/ajustes/acerca'}
         <Acerca />
       {:else if router.route.path === '/ajustes/respaldo'}

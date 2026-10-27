@@ -22,6 +22,7 @@ describe('AJUSTES_MENU', () => {
       '/ajustes/perfil',
       '/ajustes/notificaciones',
       '/ajustes/respaldo',
+      '/ajustes/apariencia',
       '/ajustes/acerca',
     ]);
     expect(isAvailable({ id: 'feriados', ruta: null })).toBe(false);
