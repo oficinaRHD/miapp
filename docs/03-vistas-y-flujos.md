@@ -66,7 +66,7 @@ Rutas con hash:
   - Hecho en M4: saludo, alertas de vencidas y de notificaciones denegadas, próximo vencimiento, próximos 30 días, vencidas.
   - Hecho en M5: resumen "Este mes" (ingresos, gastos e impuesto estimado = 0114022 + 0510122 con las mismas bases que V08, sin descuento; se lee al abrir Inicio y, si falla, las obligaciones se ven igual), botones "+ Ingreso" y "+ Gasto" (abren V07 con el tipo elegido) y enlaces a Registro y Calculadora.
   - Hecho en M6: alerta "sin respaldo" (`src/app/inicioRespaldo.ts`): sale si nunca se hizo un respaldo o el último tiene 30 días o más, y se oculta si el recordatorio mensual de V15 está desactivado. Enlaza a V15.
-  - Pendiente: el botón "Ajustes" (`#/ajustes`, V14) apunta a una vista que aún no existe.
+  - El botón "Ajustes" (`#/ajustes`) abre V14.
   - La barra inferior de navegación se añade cuando existan las vistas de las 5 pestañas.
 
 ```
@@ -204,7 +204,8 @@ Rutas con hash:
 
 ### V14 Ajustes (v0.1)
 - Hub con accesos a Perfil, Notificaciones, Respaldo, Feriados, Apariencia (claro/oscuro), Acerca de (versión de la app y de las reglas).
-- **Estado de implementación**: pendiente (M6). Mientras tanto, `#/ajustes/perfil` y `#/ajustes/respaldo` se abren por ruta.
+- **Regla** (`src/app/ajustesMenu.ts`): la lista y su orden salen de `AJUSTES_MENU`; una entrada sin ruta se muestra atenuada con "Próximamente".
+- **Estado de implementación**: hub hecho en M6 con enlaces a Perfil, Notificaciones y Respaldo. Pendiente: Feriados (lista editable; faltan los feriados reales, `01` sección 7), Apariencia (tema claro/oscuro) y Acerca de (versión de la app y de las reglas).
 
 ### V15 Respaldo y datos (v0.1)
 - Exportar respaldo y compartirlo, importar desde archivo, fecha del último respaldo, recordatorio mensual, opción "incluir datos personales", borrar todos los datos (doble confirmación).

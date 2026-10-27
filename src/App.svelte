@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Temporary shell: wires startup, profile store, onboarding guard, notices and the V01 to V05, V07, V15, V16 and V17 views.
+  // Temporary shell: wires startup, profile store, onboarding guard, notices and the V01 to V05, V07, V14, V15, V16 and V17 views.
   // A view that throws shows its error on screen (boundary) instead of freezing the app.
   // The remaining views arrive in later steps.
   import { onMount } from 'svelte';
@@ -23,6 +23,7 @@
   import Calculadora from './views/calculadora/Calculadora.svelte';
   import Respaldo from './views/respaldo/Respaldo.svelte';
   import Notificaciones from './views/notificaciones/Notificaciones.svelte';
+  import Ajustes from './views/ajustes/Ajustes.svelte';
 
   const links = [
     ['/', 'inicio'],
@@ -31,6 +32,7 @@
     ['/obligaciones', 'obligaciones'],
     ['/registro', 'registro'],
     ['/calculadora', 'calculadora'],
+    ['/ajustes', 'ajustes'],
     ['/ajustes/perfil', 'perfil'],
     ['/ajustes/respaldo', 'respaldo'],
     ['/ajustes/notificaciones', 'notificaciones'],
@@ -84,6 +86,8 @@
       {#if router.route.name === 'onboarding'}
         <h1>{es.appName}</h1>
         <Onboarding />
+      {:else if router.route.path === '/ajustes'}
+        <Ajustes />
       {:else if router.route.path === '/ajustes/respaldo'}
         <Respaldo />
       {:else if router.route.path === '/ajustes/notificaciones'}
