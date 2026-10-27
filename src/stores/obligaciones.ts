@@ -8,6 +8,7 @@ import {
   type ObligacionFilter,
   type PagoInput,
 } from '../data/repositories/obligaciones';
+import { rescheduleNotices } from './avisos';
 
 const repo = obligacionesRepo(db);
 
@@ -21,11 +22,22 @@ export interface SaveResult {
   failed: { id: string; message: string }[];
 }
 
+/**
+ * Recalculates the deadline notices after a change (paid, omitted, reopened, new date, new
+ * obligations). Fire and forget: `rescheduleNotices` never throws, so a notification problem
+ * can never break the change that was just saved.
+ */
+function refreshNotices(): void {
+  void rescheduleNotices();
+}
+
 /** Stores the generated obligations. Idempotent: existing ones are never overwritten. */
-export function addObligationDrafts(
+export async function addObligationDrafts(
   drafts: readonly ObligacionDraftInput[],
 ): Promise<{ added: number; skipped: number }> {
-  return repo.addDrafts(drafts);
+  const result = await repo.addDrafts(drafts);
+  if (result.added > 0) refreshNotices();
+  return result;
 }
 
 /** Reads obligations ordered by due date. Optional filter by state and due-date range. */
@@ -38,27 +50,39 @@ export function getObligation(id: string): Promise<Obligacion | undefined> {
   return repo.get(id);
 }
 
-/** Marks an obligation as paid. Returns the stored obligation. */
-export function markObligationPaid(id: string, pago: PagoInput): Promise<Obligacion> {
-  return repo.markPaid(id, pago);
+/** Marks an obligation as paid. Returns the stored obligation. Its notices are cancelled. */
+export async function markObligationPaid(id: string, pago: PagoInput): Promise<Obligacion> {
+  const obligation = await repo.markPaid(id, pago);
+  refreshNotices();
+  return obligation;
 }
 
-/** Omits a pending obligation (a paid one is locked by the repository). */
-export function omitObligation(id: string, motivo?: string): Promise<Obligacion> {
-  return repo.markOmitted(id, motivo);
+/** Omits a pending obligation (a paid one is locked by the repository). Its notices are cancelled. */
+export async function omitObligation(id: string, motivo?: string): Promise<Obligacion> {
+  const obligation = await repo.markOmitted(id, motivo);
+  refreshNotices();
+  return obligation;
 }
 
-/** Back to pending, clearing the payment data. */
-export function reopenObligation(id: string): Promise<Obligacion> {
-  return repo.reopen(id);
+/** Back to pending, clearing the payment data. Its notices are scheduled again. */
+export async function reopenObligation(id: string): Promise<Obligacion> {
+  const obligation = await repo.reopen(id);
+  refreshNotices();
+  return obligation;
 }
 
 /** Changes the due date of a pending obligation and records where the date came from. */
-export function setObligationDate(id: string, vence: ISODate, origen: OrigenFecha): Promise<Obligacion> {
-  return repo.setDueDate(id, vence, origen);
+export async function setObligationDate(
+  id: string,
+  vence: ISODate,
+  origen: OrigenFecha,
+): Promise<Obligacion> {
+  const obligation = await repo.setDueDate(id, vence, origen);
+  refreshNotices();
+  return obligation;
 }
 
-/** Changes the official amount, barcode or notes. */
+/** Changes the official amount, barcode or notes. Notices do not depend on them. */
 export function updateObligation(id: string, changes: ObligacionChanges): Promise<Obligacion> {
   return repo.update(id, changes);
 }
@@ -66,6 +90,7 @@ export function updateObligation(id: string, changes: ObligacionChanges): Promis
 /**
  * Saves the dates copied from the vector (venceOrigen 'vector'), one by one. A failure on one
  * obligation (for example a paid one, which the repository locks) does not stop the others.
+ * Notices are recalculated once at the end.
  */
 export async function setObligationDueDates(changes: readonly DueDateChange[]): Promise<SaveResult> {
   const result: SaveResult = { updated: 0, failed: [] };
@@ -77,5 +102,6 @@ export async function setObligationDueDates(changes: readonly DueDateChange[]): 
       result.failed.push({ id: c.id, message: e instanceof Error ? e.message : String(e) });
     }
   }
+  if (result.updated > 0) refreshNotices();
   return result;
 }

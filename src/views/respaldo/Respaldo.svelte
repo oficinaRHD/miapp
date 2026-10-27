@@ -6,6 +6,7 @@
   import { ensureSeed } from '../../data/seed';
   import { nowISO } from '../../data/util';
   import { createAndShareBackup, restoreBackupFromPicker } from '../../services/backupService';
+  import { rescheduleNotices } from '../../stores/avisos';
   import { loadPerfil } from '../../stores/perfil.svelte';
   import {
     loadBackupReminder,
@@ -111,6 +112,8 @@
         await saveLastBackup(iso);
         lastBackup = iso;
       }
+      // The restored obligations replace the old ones, so the notices must follow.
+      void rescheduleNotices();
       return {
         kind: 'ok',
         text: t.importDone(r.counts.movimientos, r.counts.obligaciones, r.preBackupName),
@@ -126,6 +129,8 @@
       await ensureSeed(db);
       await loadPerfil();
       await loadSettings();
+      // No obligations left: this cancels the pending notices.
+      void rescheduleNotices();
       return { kind: 'ok', text: t.wipeDone };
     });
   }

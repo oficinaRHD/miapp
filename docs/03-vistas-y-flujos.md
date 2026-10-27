@@ -66,7 +66,7 @@ Rutas con hash:
   - Hecho en M4: saludo, alertas de vencidas y de notificaciones denegadas, próximo vencimiento, próximos 30 días, vencidas.
   - Hecho en M5: resumen "Este mes" (ingresos, gastos e impuesto estimado = 0114022 + 0510122 con las mismas bases que V08, sin descuento; se lee al abrir Inicio y, si falla, las obligaciones se ven igual), botones "+ Ingreso" y "+ Gasto" (abren V07 con el tipo elegido) y enlaces a Registro y Calculadora.
   - Hecho en M6: alerta "sin respaldo" (`src/app/inicioRespaldo.ts`): sale si nunca se hizo un respaldo o el último tiene 30 días o más, y se oculta si el recordatorio mensual de V15 está desactivado. Enlaza a V15.
-  - Pendiente: el botón "Ajustes" (`#/ajustes`, V14) y el enlace de permiso denegado (`#/ajustes/notificaciones`, V16) apuntan a vistas que aún no existen.
+  - Pendiente: el botón "Ajustes" (`#/ajustes`, V14) apunta a una vista que aún no existe.
   - La barra inferior de navegación se añade cuando existan las vistas de las 5 pestañas.
 
 ```
@@ -118,7 +118,7 @@ Rutas con hash:
   - Solo se guardan las filas que cambian (fecha válida y distinta). Se guardan con origen "vector". Las pagadas y omitidas no se tocan; el repositorio además bloquea las pagadas.
   - El año es el del período (la anual 2026, con fecha en abril de 2027, se edita en 2026). Si hay más de un año con pendientes, se puede cambiar de año.
   - Al guardar vuelve a la lista con un aviso de cuántas fechas se cambiaron y, si alguna falló, cuántas.
-  - Pendiente: reprogramar los avisos de las fechas cambiadas (M6, notificaciones) y los feriados reales.
+  - Al guardar se reprograman los avisos (M6). Pendiente: los feriados reales.
 - **Generar el año siguiente** (`src/app/nextYear.ts`): si el año siguiente al de hoy aún no tiene obligaciones, aparece el botón "Generar obligaciones de AAAA". Muestra cuántas se crearán y el rango de fechas, y las crea con fechas **calculadas por patrón** (son una propuesta) para los tributos activos del perfil. Es idempotente. Después se ajustan con "Editar fechas del año". El año cuenta por el período, no por la fecha: un diciembre con vencimiento en enero no cuenta como del año siguiente.
 - **Estado de implementación**: lista, filtros, edición de fechas y generar el año siguiente, hechos en M4.
 
@@ -141,7 +141,7 @@ Rutas con hash:
   - La ficha ofrece copiar: RC-05 con y sin guiones, código de tributo, código de barras e importe (sin separadores, p. ej. `1250.50`).
 - **Compartir ficha** (`src/app/ficha.ts`, `src/services/share.ts`): comparte un texto con tributo, período, fecha límite, código de barras e importe. El RC-05 va **solo si se marca** "Incluir mi RC-05" (es un dato personal). Si el sistema no puede compartir, se copia el texto y se avisa.
 - **Editar datos** (`src/app/detalleEdit.ts`): fecha límite (con origen "del vector" o "manual"), código de barras e importe oficial, solo en obligaciones pendientes. No se puede vaciar un código de barras ni un importe ya guardados (el repositorio no lo permite).
-- **Estado de implementación**: V05 completa en M4. **Pendiente**: comprobante adjunto (v0.2) y cancelar o reprogramar los avisos al pagar, omitir, reabrir o cambiar la fecha (M6, necesita el servicio de notificaciones).
+- **Estado de implementación**: V05 completa en M4. **Pendiente**: comprobante adjunto (v0.2). Al pagar, omitir, reabrir o cambiar la fecha se reprograman los avisos (M6).
 
 ### V06 Registro (v0.1)
 - **Objetivo**: ver ingresos y gastos.
@@ -215,14 +215,14 @@ Rutas con hash:
   - Importar: primero un aviso de que reemplaza todos los datos; antes se guarda una copia interna automática y, si falla, no se importa nada. Tras restaurar se vuelve a cargar el perfil y los ajustes, y la fecha del último respaldo pasa a ser la del archivo restaurado. Un respaldo sin datos personales deja RC-05 y NIT vacíos.
   - Borrar todo: hay que escribir `BORRAR`. Después se recrean las categorías iniciales y, sin perfil, el guardián lleva al onboarding.
   - La vista es accesible antes de terminar el onboarding (ver V01).
-- **Estado de implementación**: hecho en M6 (alerta en Inicio incluida). Pendiente: reprogramar o cancelar avisos tras restaurar o borrar.
+- **Estado de implementación**: hecho en M6 (alerta en Inicio incluida). Tras restaurar o borrar se reprograman los avisos.
 
 ### V16 Notificaciones (v0.1)
 - Permiso: estado y botón para pedirlo o abrir ajustes del sistema.
 - Preferencias: desfases (7, 3, 1, 0 días), hora, recordatorio de registro mensual.
 - Guía de batería para que Android no cierre la app.
 - Botón "Enviar notificación de prueba".
-- **Estado de implementación**: pendiente (M6). Hoy solo existe el permiso (`src/services/notifications.ts`) y su estado guardado en Ajustes.
+- **Estado de implementación**: primera versión hecha en M6 (permiso, avisos en espera, reprogramar y notificación de prueba). Pendiente: preferencias (días antes y hora) y guía de batería completa.
 
 ### V17 Perfil y tributos activos (v0.1)
 - Campos: nombre visible, código y nombre de actividad, municipio y código de municipio, fecha de inscripción fiscal, RC-05 (16 dígitos) y NIT (11 dígitos), ambos opcionales y solo locales; ¿tiene empleados?; lista de tributos activos.
