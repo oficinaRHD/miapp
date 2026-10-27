@@ -1,6 +1,6 @@
 /* App shell: color tokens, safe areas and base element styles.
-   Imported after theme.css (see main.ts). Dark mode follows the phone; a future "Apariencia"
-   setting can force it with <html data-theme="light|dark">. */
+   Imported after theme.css (see main.ts). Dark mode follows the phone; "Apariencia" can force it
+   with <html data-theme="light|dark">. */
 :root {
   /* Phone bars. env() works on WebView 140+, --safe-area-inset-* is injected by Capacitor's SystemBars (css mode). */
   --sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
@@ -9,49 +9,58 @@
   --sar: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
 
   color-scheme: light;
-  --bg: #f3f7f5;
+  --bg: #e9efec;
   --surface: #ffffff;
-  --text: #14231c;
-  --muted: #566860;
-  --line: #dbe5df;
-  --primary: #0b6e4f;
+  --surface-2: #f4f8f6;
+  --text: #0f1d16;
+  --muted: #475a50;
+  --line: #bccbc3;
+  --primary: #0a6847;
   --primary-text: #ffffff;
-  --primary-soft: #e0f1ea;
+  --primary-soft: #d3ebe0;
+  --ok: #1b7a3d;
+  --warn: #9a5b00;
   --danger: #b3261e;
-  --shadow: 0 1px 2px rgba(16, 40, 30, 0.06), 0 4px 14px rgba(16, 40, 30, 0.06);
-  --shadow-lg: 0 10px 30px rgba(16, 40, 30, 0.18);
+  --shadow: 0 1px 2px rgba(16, 40, 30, 0.1), 0 4px 12px rgba(16, 40, 30, 0.08);
+  --shadow-lg: 0 10px 30px rgba(16, 40, 30, 0.22);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bg: #0d1411;
-    --surface: #16201b;
-    --text: #e7f0ea;
-    --muted: #9bada3;
-    --line: #26332c;
-    --primary: #3ecf9a;
-    --primary-text: #05261a;
-    --primary-soft: #1a2c24;
-    --danger: #ff8a80;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+    --bg: #080d0b;
+    --surface: #18231d;
+    --surface-2: #202f27;
+    --text: #f0f6f2;
+    --muted: #b4c4ba;
+    --line: #3d5046;
+    --primary: #4be0a8;
+    --primary-text: #04241a;
+    --primary-soft: #23412f;
+    --ok: #6fdc8c;
+    --warn: #ffb74d;
+    --danger: #ff8f86;
+    --shadow: 0 0 0 rgba(0, 0, 0, 0);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.7);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0d1411;
-  --surface: #16201b;
-  --text: #e7f0ea;
-  --muted: #9bada3;
-  --line: #26332c;
-  --primary: #3ecf9a;
-  --primary-text: #05261a;
-  --primary-soft: #1a2c24;
-  --danger: #ff8a80;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --bg: #080d0b;
+  --surface: #18231d;
+  --surface-2: #202f27;
+  --text: #f0f6f2;
+  --muted: #b4c4ba;
+  --line: #3d5046;
+  --primary: #4be0a8;
+  --primary-text: #04241a;
+  --primary-soft: #23412f;
+  --ok: #6fdc8c;
+  --warn: #ffb74d;
+  --danger: #ff8f86;
+  --shadow: 0 0 0 rgba(0, 0, 0, 0);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.7);
 }
 
 html,
@@ -77,13 +86,14 @@ body {
 :where(#app) a {
   color: var(--primary);
 }
+/* Buttons are tonal by default (readable even where a view sets color: inherit). */
 :where(#app) button {
   min-height: 44px;
   padding: 0 16px;
-  border: 0;
+  border: 1px solid var(--primary);
   border-radius: 12px;
-  background: var(--primary);
-  color: var(--primary-text);
+  background: var(--primary-soft);
+  color: var(--text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -117,15 +127,82 @@ body {
   outline-offset: 2px;
 }
 
-/* Cards and list items of the views (their own styles use currentColor borders). */
-#app .card,
-#app .item {
+/* Selected / pressed buttons (filters, type switches). */
+#app button[aria-pressed='true'],
+#app button[aria-selected='true'],
+#app button[aria-checked='true'],
+#app button.active,
+#app button.selected,
+#app button.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+
+/* Cards: keep each view's own border-left (status color) and width; only recolor the other sides. */
+#app .card {
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  border-top-color: var(--line);
+  border-right-color: var(--line);
+  border-bottom-color: var(--line);
+  border-left-color: var(--line); /* status rules below override it */
+  border-radius: 14px;
   box-shadow: var(--shadow);
 }
-#app .note {
+#app .item {
+  background: var(--surface);
+  border-color: var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+#app .totals div,
+#app .alerts {
+  background: var(--surface);
+}
+#app .totals div {
+  border-color: var(--line);
+}
+
+/* Status colors: left edge of cards and the chip ("Vencida", "A tiempo", ...). */
+#app .vencida,
+#app .urgente {
+  border-left-color: var(--danger);
+}
+#app .pronto {
+  border-left-color: var(--warn);
+}
+#app .tranquila {
+  border-left-color: var(--ok);
+}
+#app .vencida .chip,
+#app .urgente .chip {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+#app .pronto .chip {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+}
+#app .tranquila .chip {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+}
+
+/* Link-style buttons of the views. */
+#app .btn {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+#app .note,
+#app .amount,
+#app .totals dt,
+#app .item span {
   color: var(--muted);
   opacity: 1;
 }
@@ -133,7 +210,8 @@ body {
 #app p[role='alert'] {
   color: var(--danger);
 }
-#app .item span {
-  color: var(--muted);
-  opacity: 1;
+
+/* Floating "+" button: lift it above the phone's navigation bar (class name guessed: fab). */
+#app [class*='fab' i] {
+  bottom: calc(16px + var(--sab));
 }

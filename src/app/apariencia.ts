@@ -15,3 +15,13 @@ export function parseTema(value: unknown): Tema {
 export function dataThemeFor(tema: Tema): 'light' | 'dark' | null {
   return tema === 'auto' ? null : tema;
 }
+
+/** Whether the app is shown dark: forced by the user, or the phone's mode in automatic. */
+export function isDarkTheme(tema: Tema, systemDark: boolean): boolean {
+  return tema === 'auto' ? systemDark : tema === 'dark';
+}
+
+/** Style for the phone's status and navigation bars: DARK means light icons (for dark backgrounds). */
+export function barsStyleFor(dark: boolean): 'DARK' | 'LIGHT' {
+  return dark ? 'DARK' : 'LIGHT';
+}

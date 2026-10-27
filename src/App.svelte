@@ -73,6 +73,8 @@
       <Menu />
     {/if}
   </header>
+  <!-- Opaque strip under the phone's navigation bar: content never shows through its icons. -->
+  <div class="bottom-cover" aria-hidden="true"></div>
 <main>
   {#if perfilStore.error}
     <h1>{es.appName}</h1>
@@ -159,6 +161,15 @@
     font-weight: 700;
     font-size: 1.1rem;
     color: var(--primary);
+  }
+  .bottom-cover {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--sab);
+    background: var(--bg);
+    pointer-events: none;
   }
   main {
     padding: 16px 16px calc(24px + var(--sab));
