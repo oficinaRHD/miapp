@@ -222,7 +222,11 @@ Rutas con hash:
 - Preferencias: desfases (7, 3, 1, 0 días), hora, recordatorio de registro mensual.
 - Guía de batería para que Android no cierre la app.
 - Botón "Enviar notificación de prueba".
-- **Estado de implementación**: primera versión hecha en M6 (permiso, avisos en espera, reprogramar y notificación de prueba). Pendiente: preferencias (días antes y hora) y guía de batería completa.
+- **Reglas** (implementadas en `src/app/avisos.ts` y `src/app/avisosForm.ts`):
+  - Se puede elegir entre 7 días antes, 3 días antes, 1 día antes y el mismo día (al menos uno) y la hora del aviso (por defecto 09:00). Al guardar se reprograman los avisos.
+  - Se programan solo los avisos de los próximos 60 días, y solo de obligaciones pendientes y no vencidas. Los avisos son inexactos: pueden llegar unos minutos tarde.
+  - La guía de batería (plegable) da los pasos para quitar la restricción de batería a la app.
+- **Estado de implementación**: hecho en M6 (permiso, preferencias, avisos en espera, reprogramar, notificación de prueba y guía de batería). Pendiente: recordatorio mensual de registro (canal `recordatorios`).
 
 ### V17 Perfil y tributos activos (v0.1)
 - Campos: nombre visible, código y nombre de actividad, municipio y código de municipio, fecha de inscripción fiscal, RC-05 (16 dígitos) y NIT (11 dígitos), ambos opcionales y solo locales; ¿tiene empleados?; lista de tributos activos.

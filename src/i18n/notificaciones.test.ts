@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { esNotificaciones, resultText, testText } from './notificaciones';
+import { esNotificaciones, offsetLabel, resultText, testText } from './notificaciones';
 
 describe('resultText', () => {
   it('reports how many notices were scheduled', () => {
@@ -22,5 +22,18 @@ describe('testText and pendingCount', () => {
   it('uses the singular for one notice', () => {
     expect(esNotificaciones.pendingCount(1)).toBe('1 aviso en espera.');
     expect(esNotificaciones.pendingCount(5)).toBe('5 avisos en espera.');
+  });
+});
+
+describe('offsetLabel and battery guide', () => {
+  it('names each choice in natural Spanish', () => {
+    expect(offsetLabel(0)).toBe('El mismo día');
+    expect(offsetLabel(1)).toBe('1 día antes');
+    expect(offsetLabel(7)).toBe('7 días antes');
+  });
+  it('has the form errors and the battery steps', () => {
+    expect(esNotificaciones.formError.offsets).toContain('al menos un aviso');
+    expect(esNotificaciones.formError.time).toContain('hora válida');
+    expect(esNotificaciones.battery.steps.length).toBe(4);
   });
 });

@@ -1,7 +1,17 @@
 <script lang="ts">
-  // V16 (first version): permission, reschedule and test notice.
-  // Preferences (days before, hour) and the full battery guide arrive in the next step.
+  // V16: permission, preferences (days before and hour), pending notices, test and battery guide.
   import { onMount } from 'svelte';
+  import { DEFAULT_AVISOS, type AvisosSettings } from '../../app/avisos';
+  import {
+    OFFSET_CHOICES,
+    draftFromSettings,
+    hasChanges,
+    setTime,
+    toSettings,
+    toggleOffset,
+    validateDraft,
+    type AvisosDraft,
+  } from '../../app/avisosForm';
   import type { NotificationPermissionState } from '../../app/notificationPermission';
   import {
     checkNotificationPermission,
@@ -11,16 +21,21 @@
     sendTestNotice,
   } from '../../services/notifications';
   import { saveNotificationPermission } from '../../stores/ajustes';
-  import { rescheduleNotices } from '../../stores/avisos';
-  import { esNotificaciones as t, resultText, testText } from '../../i18n/notificaciones';
+  import { loadAvisosSettings, rescheduleNotices, saveAvisosSettings } from '../../stores/avisos';
+  import { esNotificaciones as t, offsetLabel, resultText, testText } from '../../i18n/notificaciones';
 
   type Message = { kind: 'ok' | 'error'; text: string };
 
   const supported = isNotificationsSupported();
   let permiso = $state<NotificationPermissionState>('unknown');
   let pending = $state(0);
+  let saved = $state<AvisosSettings>(DEFAULT_AVISOS);
+  let draft = $state<AvisosDraft>(draftFromSettings(DEFAULT_AVISOS));
   let busy = $state(false);
   let message = $state<Message | null>(null);
+
+  const formError = $derived(validateDraft(draft));
+  const dirty = $derived(hasChanges(draft, saved));
 
   function messageOf(e: unknown): string {
     return e instanceof Error ? e.message : String(e);
@@ -33,8 +48,13 @@
     pending = await countPendingNotices();
   }
 
+  async function loadPrefs(): Promise<void> {
+    saved = await loadAvisosSettings();
+    draft = draftFromSettings(saved);
+  }
+
   onMount(() => {
-    refresh().catch((e: unknown) => {
+    Promise.all([refresh(), loadPrefs()]).catch((e: unknown) => {
       message = { kind: 'error', text: `${t.actionError}: ${messageOf(e)}` };
     });
   });
@@ -58,6 +78,16 @@
       await saveNotificationPermission(state);
       if (state !== 'granted') return { kind: 'ok', text: t.permission[state] };
       return { kind: 'ok', text: resultText(await rescheduleNotices()) };
+    });
+  }
+
+  function savePrefs(): Promise<void> {
+    return run(async () => {
+      const settings = toSettings(draft);
+      await saveAvisosSettings(settings);
+      saved = settings;
+      const r = await rescheduleNotices();
+      return { kind: r.status === 'error' ? 'error' : 'ok', text: `${t.saved} ${resultText(r)}` };
     });
   }
 
@@ -90,6 +120,35 @@
   </div>
 
   <div class="card">
+    <h2>{t.prefsTitle}</h2>
+    <p>{t.prefsBody}</p>
+    {#each OFFSET_CHOICES as offset (offset)}
+      <label class="check">
+        <input
+          type="checkbox"
+          checked={draft.offsets.includes(offset)}
+          onchange={() => (draft = toggleOffset(draft, offset))}
+        />
+        <span>{offsetLabel(offset)}</span>
+      </label>
+    {/each}
+    <label class="field">
+      <span>{t.timeLabel}</span>
+      <input
+        type="time"
+        value={draft.time}
+        oninput={(e) => (draft = setTime(draft, e.currentTarget.value))}
+      />
+    </label>
+    {#if formError}
+      <p role="alert" class="error">{t.formError[formError]}</p>
+    {/if}
+    <button type="button" onclick={savePrefs} disabled={busy || !dirty || formError !== null}>
+      {busy ? t.working : t.save}
+    </button>
+  </div>
+
+  <div class="card">
     <h2>{t.pendingTitle}</h2>
     <p>{t.pendingCount(pending)}</p>
     <p class="note">{t.pendingNote}</p>
@@ -101,10 +160,16 @@
     <button type="button" onclick={test} disabled={busy}>{busy ? t.working : t.test}</button>
   </div>
 
-  <div class="card">
-    <h2>{t.batteryTitle}</h2>
-    <p>{t.batteryBody}</p>
-  </div>
+  <details class="card">
+    <summary>{t.battery.title}</summary>
+    <p>{t.battery.intro}</p>
+    <ol>
+      {#each t.battery.steps as step (step)}
+        <li>{step}</li>
+      {/each}
+    </ol>
+    <p class="note">{t.battery.tip}</p>
+  </details>
 </section>
 
 <style>
@@ -118,9 +183,32 @@
     margin: 0 0 8px;
     font-size: 1.05rem;
   }
+  summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+  }
   button {
     min-height: 44px;
     padding: 0 12px;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
+  }
+  .field input {
+    min-height: 44px;
+    padding: 0 8px;
   }
   .note {
     font-size: 0.9rem;
