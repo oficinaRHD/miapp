@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Temporary shell: wires startup, profile store, onboarding guard and the V01 to V05, V07, V15 and V17 views.
+  // Temporary shell: wires startup, profile store, onboarding guard, notices and the V01 to V05, V07, V15, V16 and V17 views.
   // A view that throws shows its error on screen (boundary) instead of freezing the app.
   // The remaining views arrive in later steps.
   import { onMount } from 'svelte';
@@ -8,6 +8,9 @@
   import { resolveRedirect } from './app/guard';
   import { startApp } from './app/bootstrap';
   import { registroRoute, tipoFromHash } from './app/registroRoutes';
+  import { onAppResume } from './services/appLifecycle';
+  import { onNoticeTapped } from './services/notifications';
+  import { rescheduleNotices } from './stores/avisos';
   import { perfilStore, isOnboardingDone } from './stores/perfil.svelte';
   import Calendario from './views/calendario/Calendario.svelte';
   import ObligacionDetalle from './views/obligaciones/ObligacionDetalle.svelte';
@@ -19,6 +22,7 @@
   import Registro from './views/registro/Registro.svelte';
   import Calculadora from './views/calculadora/Calculadora.svelte';
   import Respaldo from './views/respaldo/Respaldo.svelte';
+  import Notificaciones from './views/notificaciones/Notificaciones.svelte';
 
   const links = [
     ['/', 'inicio'],
@@ -29,6 +33,7 @@
     ['/calculadora', 'calculadora'],
     ['/ajustes/perfil', 'perfil'],
     ['/ajustes/respaldo', 'respaldo'],
+    ['/ajustes/notificaciones', 'notificaciones'],
     ['/no-existe', '404'],
   ] as const;
 
@@ -38,7 +43,16 @@
   onMount(() => {
     const stop = initRouter();
     void startApp();
-    return stop;
+    // Back in the foreground: recalculate the notices. A tap on a notice opens its obligation.
+    const stopResume = onAppResume(() => {
+      if (isOnboardingDone()) void rescheduleNotices();
+    });
+    const stopTap = onNoticeTapped((id) => navigate(`/obligaciones/${id}`));
+    return () => {
+      stop();
+      stopResume();
+      stopTap();
+    };
   });
 
   // Redirect once the profile is loaded, and again whenever route or profile change.
@@ -46,6 +60,14 @@
     if (!perfilStore.loaded || perfilStore.error) return;
     const to = resolveRedirect(router.route, isOnboardingDone());
     if (to) navigate(to, true);
+  });
+
+  // Schedule the notices once, as soon as the onboarding is done (at startup or right after it).
+  let noticesStarted = false;
+  $effect(() => {
+    if (noticesStarted || !perfilStore.loaded || perfilStore.error || !isOnboardingDone()) return;
+    noticesStarted = true;
+    void rescheduleNotices();
   });
 </script>
 
@@ -64,6 +86,8 @@
         <Onboarding />
       {:else if router.route.path === '/ajustes/respaldo'}
         <Respaldo />
+      {:else if router.route.path === '/ajustes/notificaciones'}
+        <Notificaciones />
       {:else if router.route.name === 'inicio' && perfilStore.perfil}
         <Inicio perfil={perfilStore.perfil} />
       {:else if router.route.name === 'calendario'}
