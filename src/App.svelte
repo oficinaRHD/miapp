@@ -24,6 +24,7 @@
   import Respaldo from './views/respaldo/Respaldo.svelte';
   import Notificaciones from './views/notificaciones/Notificaciones.svelte';
   import Ajustes from './views/ajustes/Ajustes.svelte';
+  import Acerca from './views/ajustes/Acerca.svelte';
 
   const links = [
     ['/', 'inicio'],
@@ -88,6 +89,8 @@
         <Onboarding />
       {:else if router.route.path === '/ajustes'}
         <Ajustes />
+      {:else if router.route.path === '/ajustes/acerca'}
+        <Acerca />
       {:else if router.route.path === '/ajustes/respaldo'}
         <Respaldo />
       {:else if router.route.path === '/ajustes/notificaciones'}

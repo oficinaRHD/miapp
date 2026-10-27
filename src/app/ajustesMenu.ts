@@ -15,7 +15,7 @@ export const AJUSTES_MENU: readonly AjusteEntry[] = [
   { id: 'respaldo', ruta: '/ajustes/respaldo' },
   { id: 'feriados', ruta: null },
   { id: 'apariencia', ruta: null },
-  { id: 'acerca', ruta: null },
+  { id: 'acerca', ruta: '/ajustes/acerca' },
 ];
 
 export function isAvailable(entry: AjusteEntry): boolean {
