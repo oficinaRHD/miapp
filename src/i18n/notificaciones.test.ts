@@ -37,3 +37,14 @@ describe('offsetLabel and battery guide', () => {
     expect(esNotificaciones.battery.steps.length).toBe(4);
   });
 });
+
+describe('reminder texts', () => {
+  it('uses the singular for one reminder', () => {
+    expect(esNotificaciones.remindersPending(1)).toBe('1 recordatorio en espera.');
+    expect(esNotificaciones.remindersPending(3)).toBe('3 recordatorios en espera.');
+  });
+  it('states the fixed times of 02', () => {
+    expect(esNotificaciones.reminderRegistro).toContain('18:00');
+    expect(esNotificaciones.reminderCalculadora).toContain('Día 1');
+  });
+});

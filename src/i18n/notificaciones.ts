@@ -48,6 +48,16 @@ export const esNotificaciones = {
     time: 'Escribe una hora válida.',
   } satisfies Record<AvisosFormError, string>,
 
+  remindersTitle: 'Recordatorios del mes',
+  remindersBody: 'Avisos de rutina, sin fecha de pago. Son orientativos.',
+  reminderRegistro: 'Último día del mes, 18:00: registrar ingresos y gastos',
+  reminderCalculadora: 'Día 1, 09:00: revisar la calculadora del mes anterior',
+  reminderRespaldo: 'Día 15, 10:00: hacer un respaldo (se activa en Respaldo)',
+  reminderBackupLink: 'Ir a Respaldo',
+  remindersSaved: 'Recordatorios guardados.',
+  remindersPending: (n: number) =>
+    n === 1 ? '1 recordatorio en espera.' : `${n} recordatorios en espera.`,
+
   pendingTitle: 'Avisos programados',
   pendingCount: (n: number) => (n === 1 ? '1 aviso en espera.' : `${n} avisos en espera.`),
   pendingNote:

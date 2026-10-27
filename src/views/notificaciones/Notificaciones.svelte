@@ -12,16 +12,24 @@
     validateDraft,
     type AvisosDraft,
   } from '../../app/avisosForm';
+  import { DEFAULT_REMINDERS, setReminder, type ReminderSettings } from '../../app/recordatorios';
   import type { NotificationPermissionState } from '../../app/notificationPermission';
   import {
     checkNotificationPermission,
     countPendingNotices,
+    countPendingReminders,
     isNotificationsSupported,
     requestNotificationPermission,
     sendTestNotice,
   } from '../../services/notifications';
   import { saveNotificationPermission } from '../../stores/ajustes';
-  import { loadAvisosSettings, rescheduleNotices, saveAvisosSettings } from '../../stores/avisos';
+  import {
+    loadAvisosSettings,
+    loadReminderSettings,
+    rescheduleNotices,
+    saveAvisosSettings,
+    saveReminderSettings,
+  } from '../../stores/avisos';
   import { esNotificaciones as t, offsetLabel, resultText, testText } from '../../i18n/notificaciones';
 
   type Message = { kind: 'ok' | 'error'; text: string };
@@ -29,6 +37,8 @@
   const supported = isNotificationsSupported();
   let permiso = $state<NotificationPermissionState>('unknown');
   let pending = $state(0);
+  let pendingReminders = $state(0);
+  let reminders = $state<ReminderSettings>(DEFAULT_REMINDERS);
   let saved = $state<AvisosSettings>(DEFAULT_AVISOS);
   let draft = $state<AvisosDraft>(draftFromSettings(DEFAULT_AVISOS));
   let busy = $state(false);
@@ -46,11 +56,13 @@
     permiso = await checkNotificationPermission();
     if (supported) await saveNotificationPermission(permiso);
     pending = await countPendingNotices();
+    pendingReminders = await countPendingReminders();
   }
 
   async function loadPrefs(): Promise<void> {
     saved = await loadAvisosSettings();
     draft = draftFromSettings(saved);
+    reminders = await loadReminderSettings();
   }
 
   onMount(() => {
@@ -88,6 +100,16 @@
       saved = settings;
       const r = await rescheduleNotices();
       return { kind: r.status === 'error' ? 'error' : 'ok', text: `${t.saved} ${resultText(r)}` };
+    });
+  }
+
+  function toggleReminderSetting(kind: keyof ReminderSettings, on: boolean): Promise<void> {
+    return run(async () => {
+      const next = setReminder(reminders, kind, on);
+      await saveReminderSettings(next);
+      reminders = next;
+      const r = await rescheduleNotices();
+      return { kind: r.status === 'error' ? 'error' : 'ok', text: t.remindersSaved };
     });
   }
 
@@ -146,6 +168,31 @@
     <button type="button" onclick={savePrefs} disabled={busy || !dirty || formError !== null}>
       {busy ? t.working : t.save}
     </button>
+  </div>
+
+  <div class="card">
+    <h2>{t.remindersTitle}</h2>
+    <p>{t.remindersBody}</p>
+    <label class="check">
+      <input
+        type="checkbox"
+        checked={reminders.registro}
+        disabled={busy}
+        onchange={(e) => toggleReminderSetting('registro', e.currentTarget.checked)}
+      />
+      <span>{t.reminderRegistro}</span>
+    </label>
+    <label class="check">
+      <input
+        type="checkbox"
+        checked={reminders.calculadora}
+        disabled={busy}
+        onchange={(e) => toggleReminderSetting('calculadora', e.currentTarget.checked)}
+      />
+      <span>{t.reminderCalculadora}</span>
+    </label>
+    <p>{t.reminderRespaldo} <a href="#/ajustes/respaldo">{t.reminderBackupLink}</a></p>
+    <p class="note">{t.remindersPending(pendingReminders)}</p>
   </div>
 
   <div class="card">

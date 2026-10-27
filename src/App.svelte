@@ -43,11 +43,11 @@
   onMount(() => {
     const stop = initRouter();
     void startApp();
-    // Back in the foreground: recalculate the notices. A tap on a notice opens its obligation.
+    // Back in the foreground: recalculate the notices. A tap on a notice opens its view (obligation or reminder route).
     const stopResume = onAppResume(() => {
       if (isOnboardingDone()) void rescheduleNotices();
     });
-    const stopTap = onNoticeTapped((id) => navigate(`/obligaciones/${id}`));
+    const stopTap = onNoticeTapped((ruta) => navigate(ruta));
     return () => {
       stop();
       stopResume();

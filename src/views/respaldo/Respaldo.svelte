@@ -79,6 +79,7 @@
   async function onReminder(): Promise<void> {
     try {
       await saveBackupReminder(reminder);
+      void rescheduleNotices();
     } catch (e) {
       message = { kind: 'error', text: `${t.actionError}: ${messageOf(e)}` };
     }

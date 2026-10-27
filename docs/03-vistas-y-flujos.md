@@ -218,15 +218,12 @@ Rutas con hash:
 - **Estado de implementación**: hecho en M6 (alerta en Inicio incluida). Tras restaurar o borrar se reprograman los avisos.
 
 ### V16 Notificaciones (v0.1)
-- Permiso: estado y botón para pedirlo o abrir ajustes del sistema.
-- Preferencias: desfases (7, 3, 1, 0 días), hora, recordatorio de registro mensual.
-- Guía de batería para que Android no cierre la app.
+- Permiso: estado y botón para pedirlo.
+- Preferencias: desfases (7, 3, 1, 0 días) y hora de los avisos de vencimiento.
+- Recordatorios del mes (canal `recordatorios`, no son fiscales): último día del mes a las 18:00 para registrar movimientos (`02`, sección 5); día 1 a las 09:00 para revisar la calculadora; día 15 a las 10:00 para hacer un respaldo, que se activa o desactiva en V15 (`respaldoRecordatorio`). Las horas del día 1 y del día 15 son de la app, no de `02`. Se programan los próximos 60 días; al tocarlos abren Registro, Calculadora o Respaldo.
+- Guía de batería plegable para que Android no cierre la app.
 - Botón "Enviar notificación de prueba".
-- **Reglas** (implementadas en `src/app/avisos.ts` y `src/app/avisosForm.ts`):
-  - Se puede elegir entre 7 días antes, 3 días antes, 1 día antes y el mismo día (al menos uno) y la hora del aviso (por defecto 09:00). Al guardar se reprograman los avisos.
-  - Se programan solo los avisos de los próximos 60 días, y solo de obligaciones pendientes y no vencidas. Los avisos son inexactos: pueden llegar unos minutos tarde.
-  - La guía de batería (plegable) da los pasos para quitar la restricción de batería a la app.
-- **Estado de implementación**: hecho en M6 (permiso, preferencias, avisos en espera, reprogramar, notificación de prueba y guía de batería). Pendiente: recordatorio mensual de registro (canal `recordatorios`).
+- **Estado de implementación**: hecho en M6 (permiso, preferencias, recordatorios mensuales, avisos en espera, reprogramar, prueba y guía de batería). Pendiente: prueba en teléfono real.
 
 ### V17 Perfil y tributos activos (v0.1)
 - Campos: nombre visible, código y nombre de actividad, municipio y código de municipio, fecha de inscripción fiscal, RC-05 (16 dígitos) y NIT (11 dígitos), ambos opcionales y solo locales; ¿tiene empleados?; lista de tributos activos.
