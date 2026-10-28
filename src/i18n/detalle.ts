@@ -59,7 +59,7 @@ export const detalle = {
   total: (cup: string) => `Total con descuento: ${cup}`,
   noAmount: 'Sin importe no se puede estimar el recargo ni el descuento.',
   notes: {
-    holidays: 'Aún no hay lista de feriados: se cuentan lunes a viernes.',
+    holidays: 'Aún no hay lista de feriados: se cuentan lunes a viernes. Cárgala en Ajustes, Feriados.',
     over60:
       'Más de 60 días hábiles: se supone 0,1 % por cada día hábil de retraso. Pendiente de confirmar con la ONAT.',
     discountOnSurcharge: 'No se sabe si el 3 % también aplica al recargo: aquí solo se aplica al importe.',

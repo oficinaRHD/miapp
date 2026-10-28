@@ -7,6 +7,7 @@
   import { nowISO } from '../../data/util';
   import { createAndShareBackup, restoreBackupFromPicker } from '../../services/backupService';
   import { rescheduleNotices } from '../../stores/avisos';
+  import { refreshHolidays } from '../../stores/holidays.svelte';
   import { loadPerfil } from '../../stores/perfil.svelte';
   import {
     loadBackupReminder,
@@ -115,6 +116,7 @@
       }
       // The restored obligations replace the old ones, so the notices must follow.
       void rescheduleNotices();
+      void refreshHolidays();
       return {
         kind: 'ok',
         text: t.importDone(r.counts.movimientos, r.counts.obligaciones, r.preBackupName),
@@ -132,6 +134,7 @@
       await loadSettings();
       // No obligations left: this cancels the pending notices.
       void rescheduleNotices();
+      void refreshHolidays();
       return { kind: 'ok', text: t.wipeDone };
     });
   }

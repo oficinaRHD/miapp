@@ -61,6 +61,6 @@ export const esOnboarding = {
     `Se crearán ${count} obligaciones, del ${first} al ${last}.`,
   summaryNone: 'Con los tributos elegidos no hay obligaciones periódicas que crear.',
   patternPrefix: 'Patrón',
-  holidaysNote: 'Las fechas calculadas aún no tienen en cuenta los feriados.',
+  holidaysNote: 'Las fechas calculadas no tienen en cuenta feriados. Después podrás cargarlos en Ajustes, Feriados.',
   estimateNotice: 'Estimación orientativa. Confirma con tu vector fiscal.',
 } as const;

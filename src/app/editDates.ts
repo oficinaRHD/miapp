@@ -4,6 +4,7 @@
 import type { Obligacion } from '../data/models';
 import { compareDates, isValidISODate } from '../domain/dates';
 import { generateObligations, obligationKey } from '../domain/schedule';
+import type { Holidays } from '../domain/businessDays';
 import { findTributo } from '../domain/tributos.catalog';
 import type { ISODate } from '../domain/types';
 
@@ -94,9 +95,17 @@ export function pendingChanges(obligaciones: readonly Obligacion[], draft: EditD
 }
 
 /** Due dates as the pattern calculates them, by `obligationKey` (shown next to each field). */
-export function patternByKey(codes: readonly string[], year: number): Record<string, ISODate> {
+export function patternByKey(
+  codes: readonly string[],
+  year: number,
+  holidays?: Holidays,
+): Record<string, ISODate> {
   const out: Record<string, ISODate> = {};
-  for (const d of generateObligations({ activeTributos: [...new Set(codes)], year })) {
+  for (const d of generateObligations({
+    activeTributos: [...new Set(codes)],
+    year,
+    ...(holidays ? { holidays } : {}),
+  })) {
     out[obligationKey(d.tributoCodigo, d.periodoClave)] = d.vence;
   }
   return out;

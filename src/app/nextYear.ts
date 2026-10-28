@@ -2,6 +2,7 @@
 // Dates come from `generateObligations` in the domain: calculated by pattern, only a proposal.
 // The user then adjusts them with "Editar fechas del año" using their vector.
 import type { Obligacion } from '../data/models';
+import type { Holidays } from '../domain/businessDays';
 import { generateObligations, type ObligationDraft } from '../domain/schedule';
 import type { ISODate } from '../domain/types';
 import { fiscalYearOf } from './editDates';
@@ -16,7 +17,14 @@ export function nextYearToGenerate(obligaciones: readonly Obligacion[], today: I
   return obligaciones.some((o) => fiscalYearOf(o) === next) ? null : next;
 }
 
-/** Every period of `year` for the active tributos (no "from this month" cut: it is a whole new year). */
-export function nextYearPlan(activeTributos: readonly string[], year: number): ObligationDraft[] {
-  return generateObligations({ activeTributos, year });
+/**
+ * Every period of `year` for the active tributos (no "from this month" cut: it is a whole new year).
+ * With `holidays`, business-day rules skip them; without, only weekends.
+ */
+export function nextYearPlan(
+  activeTributos: readonly string[],
+  year: number,
+  holidays?: Holidays,
+): ObligationDraft[] {
+  return generateObligations({ activeTributos, year, ...(holidays ? { holidays } : {}) });
 }

@@ -14,6 +14,7 @@
   import { feriadosFijosDe } from '../../domain/feriadosFijos';
   import { esFeriados as t } from '../../i18n/feriados';
   import { listFeriados, saveFeriados } from '../../stores/feriados';
+  import { refreshHolidays } from '../../stores/holidays.svelte';
 
   let list = $state<FeriadoItem[]>([]);
   let fecha = $state('');
@@ -42,6 +43,7 @@
     try {
       await saveFeriados(next);
       list = next;
+      await refreshHolidays();
       return true;
     } catch (e) {
       message = { kind: 'error', text: `${t.actionError}: ${messageOf(e)}` };

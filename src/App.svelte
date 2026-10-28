@@ -28,6 +28,7 @@
   import Apariencia from './views/ajustes/Apariencia.svelte';
   import Feriados from './views/ajustes/Feriados.svelte';
   import { initTema } from './stores/tema';
+  import { refreshHolidays } from './stores/holidays.svelte';
   import Menu from './views/shell/Menu.svelte';
   import { esNav } from './i18n/nav';
   import { showMenu } from './app/nav';
@@ -39,6 +40,7 @@
     const stop = initRouter();
     void startApp();
     void initTema();
+    void refreshHolidays();
     // Back in the foreground: recalculate the notices. A tap on a notice opens its view (obligation or reminder route).
     const stopResume = onAppResume(() => {
       if (isOnboardingDone()) void rescheduleNotices();

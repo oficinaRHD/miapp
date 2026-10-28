@@ -24,6 +24,7 @@
     type OnboardingStep,
   } from '../../app/onboarding';
   import { buildPlan, groupPlan, patternDates, planSummary, yearOf } from '../../app/yearDates';
+  import { holidaysStore } from '../../stores/holidays.svelte';
   import { localISODate } from '../../domain/dates';
   import { obligationKey } from '../../domain/schedule';
   import { esOnboarding as t } from '../../i18n/onboarding';
@@ -49,12 +50,13 @@
   // Year dates (step 5). Vector dates only count in vector mode.
   const plan = $derived(
     buildPlan({
+      holidays: holidaysStore.value,
       activeTributos: draft.tributosActivos,
       today,
       ...(draft.fechasModo === 'vector' ? { vectorDates: draft.fechasVector } : {}),
     }),
   );
-  const pattern = $derived(patternDates({ activeTributos: draft.tributosActivos, today }));
+  const pattern = $derived(patternDates({ holidays: holidaysStore.value, activeTributos: draft.tributosActivos, today }));
   const groups = $derived(groupPlan(plan));
   const summary = $derived(planSummary(plan));
 
@@ -277,7 +279,7 @@
         {/each}
       {/if}
 
-      <p class="hint">{t.holidaysNote}</p>
+      {#if holidaysStore.value.size === 0}<p class="hint">{t.holidaysNote}</p>{/if}
       <p class="hint">{t.estimateNotice}</p>
     {/if}
 

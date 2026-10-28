@@ -23,6 +23,7 @@
   import { localISODate } from '../../domain/dates';
   import { formatCup } from '../../domain/money';
   import { findTributo } from '../../domain/tributos.catalog';
+  import { holidaysStore } from '../../stores/holidays.svelte';
   import { detalle as t } from '../../i18n/detalle';
   import { copyText } from '../../services/clipboard';
   import { shareText } from '../../services/share';
@@ -71,7 +72,7 @@
 
   const id = $derived(router.route.params['id']);
   const tributo = $derived(o ? findTributo(o.tributoCodigo) : undefined);
-  const quote = $derived(o ? quotePayment(o, today, electronic) : null);
+  const quote = $derived(o ? quotePayment(o, today, electronic, holidaysStore.value) : null);
   const errors = $derived(validatePayment(form, today));
   const rc05 = $derived(perfilStore.perfil?.rc05);
 
@@ -177,8 +178,8 @@
 
   function startPay(): void {
     if (!o) return;
-    const base = suggestedForm(o, today);
-    form = electronic ? setCanal(base, o, 'electronico') : base;
+    const base = suggestedForm(o, today, holidaysStore.value);
+    form = electronic ? setCanal(base, o, 'electronico', holidaysStore.value) : base;
     showErrors = false;
     failure = null;
     mode = 'pagar';
@@ -322,7 +323,7 @@
           <p>{t.discount(formatCup(quote.discount))}</p>
           <p><strong>{t.total(formatCup(quote.principal - quote.discount))}</strong></p>
         {/if}
-        <p class="hint">{t.notes.holidays}</p>
+        {#if holidaysStore.value.size === 0}<p class="hint">{t.notes.holidays}</p>{/if}
         {#if quote.late?.tier === 'over60'}
           <p class="hint">{t.notes.over60}</p>
         {/if}
@@ -404,7 +405,7 @@
             type="date"
             max={today}
             value={form.pagadaEn}
-            onchange={(e) => o && (form = setPagadaEn(form, o, e.currentTarget.value))}
+            onchange={(e) => o && (form = setPagadaEn(form, o, e.currentTarget.value, holidaysStore.value))}
           />
 
           <fieldset>
@@ -415,7 +416,7 @@
                   type="radio"
                   name="pay-channel"
                   checked={form.canal === c}
-                  onchange={() => o && (form = setCanal(form, o, c))}
+                  onchange={() => o && (form = setCanal(form, o, c, holidaysStore.value))}
                 />
                 <span>{t.channels[c]}</span>
               </label>
@@ -426,7 +427,7 @@
               <input
                 type="checkbox"
                 checked={form.descuento3}
-                onchange={(e) => o && (form = setDescuento(form, o, e.currentTarget.checked))}
+                onchange={(e) => o && (form = setDescuento(form, o, e.currentTarget.checked, holidaysStore.value))}
               />
               <span>{t.applyDiscount}</span>
             </label>

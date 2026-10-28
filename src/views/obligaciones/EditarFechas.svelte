@@ -13,6 +13,7 @@
     setEditDate,
     type EditDraft,
   } from '../../app/editDates';
+  import { holidaysStore } from '../../stores/holidays.svelte';
   import { formatDate } from '../../app/format';
   import { obligationKey } from '../../domain/schedule';
   import type { ISODate } from '../../domain/types';
@@ -41,7 +42,7 @@
   const year = $derived(chosen ?? defaultYear(years, yearOf(today)));
   const rows = $derived(editableRows(all, year));
   const groups = $derived(groupEditable(rows));
-  const pattern = $derived(patternByKey(rows.map((o) => o.tributoCodigo), year));
+  const pattern = $derived(patternByKey(rows.map((o) => o.tributoCodigo), year, holidaysStore.value));
   const changes = $derived(pendingChanges(all, draft));
 
   function moveYear(delta: number): void {
@@ -112,7 +113,7 @@
     {/each}
   {/if}
 
-  <p class="hint">{t.holidaysNote}</p>
+  {#if holidaysStore.value.size === 0}<p class="hint">{t.holidaysNote}</p>{/if}
   <p class="hint">{t.estimateNotice}</p>
 
   {#if failure}

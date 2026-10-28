@@ -4,6 +4,7 @@
   import { statusOf } from '../../app/calendario';
   import { formatDate } from '../../app/format';
   import { nextYearPlan, nextYearToGenerate } from '../../app/nextYear';
+  import { holidaysStore } from '../../stores/holidays.svelte';
   import { planSummary } from '../../app/yearDates';
   import {
     FILTERS,
@@ -36,7 +37,7 @@
   let genError = $state<string | null>(null);
   const nextYear = $derived(nextYearToGenerate(all, today));
   const genPlan = $derived(
-    nextYear === null ? [] : nextYearPlan(perfilStore.perfil?.tributosActivos ?? [], nextYear),
+    nextYear === null ? [] : nextYearPlan(perfilStore.perfil?.tributosActivos ?? [], nextYear, holidaysStore.value),
   );
   const genSummary = $derived(planSummary(genPlan));
 
@@ -145,7 +146,7 @@
         {:else}
           <p>{t.nextYear.none}</p>
         {/if}
-        <p class="note">{t.nextYear.holidaysNote}</p>
+        {#if holidaysStore.value.size === 0}<p class="note">{t.nextYear.holidaysNote}</p>{/if}
         {#if genError}
           <p class="error" role="alert">{t.nextYear.error}: {genError}</p>
         {/if}

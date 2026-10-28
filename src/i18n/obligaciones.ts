@@ -52,7 +52,7 @@ export const obligaciones = {
     saved: (n: number) => (n === 1 ? 'Se cambió 1 fecha.' : `Se cambiaron ${n} fechas.`),
     failed: (n: number) => (n === 1 ? 'No se pudo cambiar 1 fecha' : `No se pudieron cambiar ${n} fechas`),
     empty: 'No hay obligaciones pendientes en este año.',
-    holidaysNote: 'Las fechas calculadas aún no tienen en cuenta los feriados.',
+    holidaysNote: 'Las fechas calculadas no tienen en cuenta feriados porque no has cargado ninguno (Ajustes, Feriados).',
     estimateNotice: 'Estimación orientativa. Confirma con tu vector fiscal.',
   },
   nextYear: {
@@ -62,7 +62,7 @@ export const obligaciones = {
     summary: (count: number, first: string, last: string) =>
       `Se crearán ${count} obligaciones, del ${first} al ${last}.`,
     none: 'Con los tributos activos no hay obligaciones periódicas que crear.',
-    holidaysNote: 'Las fechas calculadas aún no tienen en cuenta los feriados.',
+    holidaysNote: 'Las fechas calculadas no tienen en cuenta feriados porque no has cargado ninguno (Ajustes, Feriados).',
     confirm: 'Crear obligaciones',
     cancel: 'Cancelar',
     created: (count: number, year: number) =>
