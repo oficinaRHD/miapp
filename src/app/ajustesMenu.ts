@@ -13,7 +13,7 @@ export const AJUSTES_MENU: readonly AjusteEntry[] = [
   { id: 'perfil', ruta: '/ajustes/perfil' },
   { id: 'notificaciones', ruta: '/ajustes/notificaciones' },
   { id: 'respaldo', ruta: '/ajustes/respaldo' },
-  { id: 'feriados', ruta: null },
+  { id: 'feriados', ruta: '/ajustes/feriados' },
   { id: 'apariencia', ruta: '/ajustes/apariencia' },
   { id: 'acerca', ruta: '/ajustes/acerca' },
 ];

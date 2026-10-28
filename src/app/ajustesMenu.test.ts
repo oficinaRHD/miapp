@@ -22,6 +22,7 @@ describe('AJUSTES_MENU', () => {
       '/ajustes/perfil',
       '/ajustes/notificaciones',
       '/ajustes/respaldo',
+      '/ajustes/feriados',
       '/ajustes/apariencia',
       '/ajustes/acerca',
     ]);

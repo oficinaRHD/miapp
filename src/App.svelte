@@ -26,6 +26,7 @@
   import Ajustes from './views/ajustes/Ajustes.svelte';
   import Acerca from './views/ajustes/Acerca.svelte';
   import Apariencia from './views/ajustes/Apariencia.svelte';
+  import Feriados from './views/ajustes/Feriados.svelte';
   import { initTema } from './stores/tema';
   import Menu from './views/shell/Menu.svelte';
   import { esNav } from './i18n/nav';
@@ -90,6 +91,8 @@
         <Onboarding />
       {:else if router.route.path === '/ajustes'}
         <Ajustes />
+      {:else if router.route.path === '/ajustes/feriados'}
+        <Feriados />
       {:else if router.route.path === '/ajustes/apariencia'}
         <Apariencia />
       {:else if router.route.path === '/ajustes/acerca'}
